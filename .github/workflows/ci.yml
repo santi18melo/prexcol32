@@ -1,0 +1,44 @@
+name: Django CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build-and-test:
+
+    runs-on: ubuntu-latest
+    strategy:
+      max-parallel: 4
+      matrix:
+        python-version: [3.9]
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v3
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    - name: Install Dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+
+    - name: Run Migrations
+      run: |
+        python src/backend/manage.py migrate
+      env:
+        DJANGO_SETTINGS_MODULE: settings
+        PYTHONPATH: src/backend
+
+    - name: Run Tests
+      # Run tests for our key apps: usuarios, productos, ventas, pagos
+      run: |
+        python src/backend/manage.py test apps.usuarios apps.productos apps.ventas apps.pagos
+      env:
+        DJANGO_SETTINGS_MODULE: settings
+        PYTHONPATH: src/backend
