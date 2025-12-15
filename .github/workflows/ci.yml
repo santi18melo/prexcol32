@@ -34,6 +34,8 @@ jobs:
       env:
         DJANGO_SETTINGS_MODULE: settings
         PYTHONPATH: src/backend
+        SECRET_KEY: "test-secret-key-ci"
+        DEBUG: "True"
 
     - name: Run Tests
       # Run tests for our key apps: usuarios, productos, ventas, pagos
@@ -42,3 +44,5 @@ jobs:
       env:
         DJANGO_SETTINGS_MODULE: settings
         PYTHONPATH: src/backend
+        SECRET_KEY: "test-secret-key-ci"
+        DEBUG: "True"
