@@ -35,7 +35,7 @@ if errorlevel 1 (
 REM 3. VERIFICAR FRONTEND (Smart install)
 set "FRONT_DIR=%ROOT_DIR%\src\frontend"
 if not exist "%FRONT_DIR%\node_modules" (
-    echo [SETUP] Instalando modulos Frontend (primera vez)...
+    echo [SETUP] Instalando modulos Frontend - primera vez...
     cd /d "%FRONT_DIR%"
     call npm install --no-audit --no-fund --quiet
     cd /d "%ROOT_DIR%"
