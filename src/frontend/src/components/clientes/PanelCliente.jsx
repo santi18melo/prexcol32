@@ -1,13 +1,10 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import {
-  getTiendas,
-  getProductosPorTienda,
-  getMisPedidos,
-  crearPedido,
-  getMetodosPago
-} from '../../services/productosService';
+import ProductService from '../../services/productService';
+import StoreService from '../../services/storeService';
+import OrderService from '../../services/orderService';
+import PaymentService from '../../services/paymentService';
 import '../../styles/PanelCliente.css';
 import DashboardHeader from '../DashboardHeader';
 
@@ -34,8 +31,9 @@ function PanelCliente() {
   const cargarProductosPorTienda = useCallback(async (tiendaId) => {
     try {
       setLoading(true);
-      const data = await getProductosPorTienda(tiendaId);
-      setProductos(Array.isArray(data) ? data : []);
+      const data = await ProductService.listProducts({ tienda: tiendaId });
+      const productosData = data.results || data;
+      setProductos(Array.isArray(productosData) ? productosData : []);
       setCarrito([]);
       setError("");
     } catch (err) {
@@ -53,17 +51,17 @@ function PanelCliente() {
     setLoading(true);
     try {
       // Cargar pedidos del cliente
-      const resPedidos = await getMisPedidos();
-      setPedidos(Array.isArray(resPedidos) ? resPedidos : []);
+      const resPedidos = await OrderService.getMyOrders();
+      setPedidos(Array.isArray(resPedidos.results || resPedidos) ? (resPedidos.results || resPedidos) : []);
 
       // Cargar tiendas disponibles
-      const resTiendas = await getTiendas();
+      const resTiendas = await StoreService.listStores();
       const tiendasData = resTiendas.results || resTiendas;
       setTiendas(Array.isArray(tiendasData) ? tiendasData : []);
 
       // Cargar métodos de pago
       try {
-        const resMetodos = await getMetodosPago();
+        const resMetodos = await PaymentService.getPaymentMethods();
         const metodosData = resMetodos.results || resMetodos;
         setMetodosPago(Array.isArray(metodosData) ? metodosData : []);
         if (metodosData.length > 0) {
@@ -77,8 +75,12 @@ function PanelCliente() {
 
       // Cargar productos de la primera tienda
       if (tiendasData.length > 0) {
-        await cargarProductosPorTienda(tiendasData[0].id);
-        setTiendaSeleccionada(tiendasData[0].id);
+        // Corrección: Solo establecer tienda seleccionada, no cargar productos automáticamente
+        // para evitar llamadas dobles o confusas si hay muchas tiendas.
+        // Pero la lógica anterior cargaba la primera.
+        const tFirst = tiendasData[0].id;
+        setTiendaSeleccionada(tFirst);
+        await cargarProductosPorTienda(tFirst);
       }
 
       setError("");
@@ -178,7 +180,7 @@ function PanelCliente() {
         notas: ''
       };
 
-      await crearPedido(pedidoData);
+      await OrderService.createOrder(pedidoData);
 
       setExito('✓ Pedido creado exitosamente');
       setCarrito([]);

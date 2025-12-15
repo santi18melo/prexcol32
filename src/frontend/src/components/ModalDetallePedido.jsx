@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { getDetallesPedido } from '../services/productosService';
+import OrderService from '../services/orderService';
 import InvoiceService from '../services/invoiceService';
 import '../styles/ModalEdicion.css';
 
@@ -21,7 +21,7 @@ export default function ModalDetallePedido({ pedido, onClose, showStatusChange =
   const cargarDetalles = async () => {
     setLoading(true);
     try {
-      const data = await getDetallesPedido(pedido.id);
+      const data = await OrderService.getOrderDetailsItems(pedido.id);
       setDetalles(data);
     } catch (err) {
       console.error("Error cargando detalles:", err);

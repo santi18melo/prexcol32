@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import productosService from '../../services/productosService';
+import ProductService from '../../services/productService';
 import UserService from '../../services/userService';
 import '../../styles/AsignarProductos.css';
 
@@ -36,7 +36,7 @@ function AsignarProductos() {
     setError('');
     try {
       const [productosData, proveedoresData] = await Promise.all([
-        productosService.getProductos(),
+        ProductService.listProducts(),
         UserService.getProveedores()
       ]);
       
@@ -67,7 +67,7 @@ function AsignarProductos() {
 
     try {
       setError('');
-      const resultado = await productosService.asignarProveedor(productoId, proveedorId);
+      const resultado = await ProductService.assignProvider(productoId, proveedorId);
       setMensaje(resultado.mensaje || 'Proveedor asignado correctamente');
       
       setProductos(prev => prev.map(p => 
@@ -189,7 +189,7 @@ function AsignarProductos() {
     for (const productoId of selectedIds) {
       for (const proveedorId of proveedoresSeleccionados) {
         try {
-          const resultado = await productosService.asignarProveedor(productoId, proveedorId);
+          const resultado = await ProductService.assignProvider(productoId, proveedorId);
           
           // Actualizar estado local (solo la última asignación se reflejará)
           setProductos(prev => prev.map(p => 

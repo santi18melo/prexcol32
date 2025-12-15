@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import productosService from '../../services/productosService';
+import ProductService from '../../services/productService';
 import '../../styles/ProveedorPanel.css';
 import DashboardHeader from '../DashboardHeader';
 
@@ -29,7 +29,7 @@ function PanelProveedor() {
     setLoading(true);
     setError('');
     try {
-      const data = await productosService.getMisProductos();
+      const data = await ProductService.getMyProducts();
       setProductos(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error('Error cargando productos:', error);
@@ -51,7 +51,7 @@ function PanelProveedor() {
     setMensaje('');
     setUpdating(prev => ({ ...prev, [id]: true }));
     try {
-      const resultado = await productosService.ajustarStock(id, operacion, cantidad);
+      const resultado = await ProductService.adjustStock(id, operacion, cantidad);
       
       if (resultado && resultado.producto_id) {
          await cargarProductos();
@@ -121,13 +121,13 @@ function PanelProveedor() {
         descripcion: editForm.descripcion
       };
       
-      await productosService.actualizarProducto(editingProduct.id, updateData);
+      await ProductService.updateProduct(editingProduct.id, updateData);
 
       // 2. Update image if changed
       if (editForm.imagen) {
         const formData = new FormData();
         formData.append('imagen', editForm.imagen);
-        await productosService.subirImagenProducto(editingProduct.id, formData);
+        await ProductService.uploadImage(editingProduct.id, formData);
       }
 
       setMensaje('Producto actualizado correctamente');
