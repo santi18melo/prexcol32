@@ -1,7 +1,8 @@
 @echo off
 REM ============================================
 REM PREXCOL - Auto Python Installer
-REM Downloads and extracts embedded Python if not found
+REM Downloads and extracts embedded Python
+REM Installs dependencies directly into embed env (no separate venv)
 REM ============================================
 
 SET ROOT_DIR=%~dp0..
@@ -19,7 +20,7 @@ REM Check if embedded Python already exists
 if exist "%PYTHON_EXE%" (
     echo [OK] Python embebido encontrado en: %PYTHON_EMBED_DIR%
     "%PYTHON_EXE%" --version
-    goto :SETUP_VENV
+    goto :INSTALL_DEPS
 )
 
 echo [*] Python no encontrado. Descargando version embebida...
@@ -49,64 +50,41 @@ powershell -Command "Expand-Archive -Path '%ROOT_DIR%\python-embed.zip' -Destina
 
 REM Cleanup
 del "%ROOT_DIR%\python-embed.zip"
-
-REM Enable pip in embedded Python
-echo [*] Habilitando pip...
-powershell -Command "(Get-Content '%PYTHON_EMBED_DIR%\python311._pth') -replace '#import site', 'import site' | Set-Content '%PYTHON_EMBED_DIR%\python311._pth'"
-
-REM Download get-pip.py
-echo [*] Instalando pip...
-powershell -Command "Invoke-WebRequest -Uri 'https://bootstrap.pypa.io/get-pip.py' -OutFile '%PYTHON_EMBED_DIR%\get-pip.py'"
-"%PYTHON_EXE%" "%PYTHON_EMBED_DIR%\get-pip.py" --quiet
-
-REM Cleanup
-del "%PYTHON_EMBED_DIR%\get-pip.py"
-
-echo.
-echo [OK] Python %PYTHON_VERSION% instalado exitosamente
-echo.
-
-:SETUP_VENV
-echo [*] Creando entorno virtual con Python embebido...
-echo.
-
-SET VENV_DIR=%ROOT_DIR%\.venv
-
-REM Remove existing venv if exists
-if exist "%VENV_DIR%" (
-    echo [*] Removiendo entorno virtual anterior...
-    rmdir /s /q "%VENV_DIR%"
+if exist "%PYTHON_EMBED_DIR%\python311._pth" (
+    echo [*] Habilitando pip...
+    powershell -Command "(Get-Content '%PYTHON_EMBED_DIR%\python311._pth') -replace '#import site', 'import site' | Set-Content '%PYTHON_EMBED_DIR%\python311._pth'"
 )
 
-REM Create venv
-"%PYTHON_EXE%" -m venv "%VENV_DIR%"
-if %errorlevel% neq 0 (
-    echo [ERROR] Fallo al crear entorno virtual
-    pause
-    exit /b 1
+:INSTALL_DEPS
+echo.
+echo [*] Configurando dependencias en entorno embebido...
+
+REM Ensure pip is installed
+if not exist "%PYTHON_EMBED_DIR%\Scripts\pip.exe" (
+    echo [*] Instalando Pip...
+    powershell -Command "Invoke-WebRequest -Uri 'https://bootstrap.pypa.io/get-pip.py' -OutFile '%PYTHON_EMBED_DIR%\get-pip.py'"
+    "%PYTHON_EXE%" "%PYTHON_EMBED_DIR%\get-pip.py" --no-warn-script-location
+    del "%PYTHON_EMBED_DIR%\get-pip.py"
 )
 
-REM Activate and install dependencies
-echo [*] Instalando dependencias del proyecto...
-call "%VENV_DIR%\Scripts\activate.bat"
-python -m pip install --upgrade pip --quiet
-pip install -r "%ROOT_DIR%\requirements.txt" --quiet
+REM Install project requirements
+echo [*] Instalando librerias del proyecto...
+"%PYTHON_EXE%" -m pip install --upgrade pip --quiet --no-warn-script-location
+"%PYTHON_EXE%" -m pip install -r "%ROOT_DIR%\requirements.txt" --quiet --no-warn-script-location
 
 if %errorlevel% neq 0 (
-    echo [ERROR] Fallo al instalar dependencias
+    echo [ERROR] Fallo al instalar dependencias del proyecto.
+    echo Verifica tu conexion a internet.
     pause
     exit /b 1
 )
 
 echo.
 echo ==========================================
-echo [OK] Configuracion completada
+echo [OK] Configuracion Exitosa
 echo ==========================================
 echo.
-echo Python embebido instalado en: %PYTHON_EMBED_DIR%
-echo Entorno virtual creado en: %VENV_DIR%
+echo Python instalado en: %PYTHON_EMBED_DIR%
+echo Dependencias instaladas en: %PYTHON_EMBED_DIR%\Lib\site-packages
 echo.
-echo Ahora puedes ejecutar: scripts\start_prexcol.bat
-echo.
-pause
 exit /b 0

@@ -22,7 +22,15 @@ SET "FRONTEND_DIR=%ROOT_DIR%\src\frontend"
 SET "LOGS_DIR=%ROOT_DIR%\logs"
 SET "VENV_DIR=%ROOT_DIR%\.venv"
 SET "PYTHON_EMBED_DIR=%ROOT_DIR%\.python-embed"
-SET "PYTHON_EXE=%VENV_DIR%\Scripts\python.exe"
+
+REM Detect Python Mode
+if exist "%PYTHON_EMBED_DIR%\python.exe" (
+    set "PYTHON_EXE=%PYTHON_EMBED_DIR%\python.exe"
+    set "USING_EMBED=1"
+) else (
+    set "PYTHON_EXE=%VENV_DIR%\Scripts\python.exe"
+    set "USING_EMBED=0"
+)
 
 REM Initialize
 cls
@@ -40,25 +48,36 @@ if not exist "%LOGS_DIR%\celery" mkdir "%LOGS_DIR%\celery"
 timeout /t 1 /nobreak >nul
 
 :STEP_2_VENV
-call :update_progress "Verifying Virtual Environment"
-set "NEEDS_REPAIR=0"
-set "FRESH_INSTALL=0"
+call :update_progress "Verifying Environment"
 
-REM Check if we need to run auto-setup (no Python found)
-if not exist "%VENV_DIR%\Scripts\activate.bat" (
-    if not exist "%PYTHON_EMBED_DIR%\python.exe" (
-        echo.
-        echo %YELLOW%[!] No se encontro Python instalado.%RESET%
-        echo %CYAN%[*] Ejecutando instalacion automatica...%RESET%
-        echo.
+if "%USING_EMBED%"=="1" (
+    echo   - Using Embedded Python (Portable Mode)
+    "%PYTHON_EXE%" --version >nul 2>&1
+    if !errorlevel! neq 0 (
+        echo   %YELLOW%[!] Embedded Python seems corrupt. Re-running setup...%RESET%
         call "%~dp0auto_setup.bat"
-        if !errorlevel! neq 0 (
-            call :show_error "Auto-setup failed. Please install Python manually."
-            exit /b 1
-        )
-        goto :STEP_3_DEPS
+        if !errorlevel! neq 0 exit /b 1
     )
-    set "NEEDS_REPAIR=1"
+    goto :STEP_3_DEPS
+)
+
+REM Standard VENV Check (Legacy Mode)
+set "NEEDS_REPAIR=0"
+
+if not exist "%VENV_DIR%\Scripts\activate.bat" (
+    echo.
+    echo %YELLOW%[!] No environment found.%RESET%
+    echo %CYAN%[*] Attempting Auto-Setup (Embedded)...%RESET%
+    call "%~dp0auto_setup.bat"
+    
+    if exist "%PYTHON_EMBED_DIR%\python.exe" (
+        set "PYTHON_EXE=%PYTHON_EMBED_DIR%\python.exe"
+        set "USING_EMBED=1"
+        goto :STEP_3_DEPS
+    ) else (
+        call :show_error "Setup fatal error. Could not install Python."
+        exit /b 1
+    )
 ) else (
     call "%VENV_DIR%\Scripts\activate.bat" >nul 2>&1
     if !errorlevel! neq 0 set "NEEDS_REPAIR=1"
@@ -70,11 +89,6 @@ if "!NEEDS_REPAIR!"=="1" (
     if !errorlevel! neq 0 (
         call :show_error "Auto-Repair Failed. See logs/recovery.log"
         exit /b 1
-    )
-    set "FRESH_INSTALL=1"
-    if not exist "%VENV_DIR%\Scripts\activate.bat" (
-         call :show_error "Environment missing after repair."
-         exit /b 1
     )
 )
 
@@ -191,8 +205,15 @@ start "PREXCOL Backend" cmd /k "cd /d "%BACKEND_DIR%" && set PYTHONPATH=%ROOT_DI
 
 :STEP_6_CELERY
 call :update_progress "Launching Background Tasks"
-start "PREXCOL Celery Worker" cmd /k "cd /d "%BACKEND_DIR%" && "%VENV_DIR%\Scripts\celery.exe" -A backend worker -l info > "%LOGS_DIR%\celery\worker.log" 2>&1"
-start "PREXCOL Celery Beat" cmd /k "cd /d "%BACKEND_DIR%" && "%VENV_DIR%\Scripts\celery.exe" -A backend beat -l info > "%LOGS_DIR%\celery\beat.log" 2>&1"
+
+if "%USING_EMBED%"=="1" (
+    set "CELERY_BIN=%PYTHON_EMBED_DIR%\Scripts\celery.exe"
+) else (
+    set "CELERY_BIN=%VENV_DIR%\Scripts\celery.exe"
+)
+
+start "PREXCOL Celery Worker" cmd /k "cd /d "%BACKEND_DIR%" && "%CELERY_BIN%" -A backend worker -l info > "%LOGS_DIR%\celery\worker.log" 2>&1"
+start "PREXCOL Celery Beat" cmd /k "cd /d "%BACKEND_DIR%" && "%CELERY_BIN%" -A backend beat -l info > "%LOGS_DIR%\celery\beat.log" 2>&1"
 
 :STEP_7_FRONTEND
 call :update_progress "Launching React Frontend"
