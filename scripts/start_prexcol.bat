@@ -21,6 +21,7 @@ SET "BACKEND_DIR=%ROOT_DIR%\src\backend"
 SET "FRONTEND_DIR=%ROOT_DIR%\src\frontend"
 SET "LOGS_DIR=%ROOT_DIR%\logs"
 SET "VENV_DIR=%ROOT_DIR%\.venv"
+SET "PYTHON_EMBED_DIR=%ROOT_DIR%\.python-embed"
 SET "PYTHON_EXE=%VENV_DIR%\Scripts\python.exe"
 
 REM Initialize
@@ -43,7 +44,20 @@ call :update_progress "Verifying Virtual Environment"
 set "NEEDS_REPAIR=0"
 set "FRESH_INSTALL=0"
 
+REM Check if we need to run auto-setup (no Python found)
 if not exist "%VENV_DIR%\Scripts\activate.bat" (
+    if not exist "%PYTHON_EMBED_DIR%\python.exe" (
+        echo.
+        echo %YELLOW%[!] No se encontro Python instalado.%RESET%
+        echo %CYAN%[*] Ejecutando instalacion automatica...%RESET%
+        echo.
+        call "%~dp0auto_setup.bat"
+        if !errorlevel! neq 0 (
+            call :show_error "Auto-setup failed. Please install Python manually."
+            exit /b 1
+        )
+        goto :STEP_3_DEPS
+    )
     set "NEEDS_REPAIR=1"
 ) else (
     call "%VENV_DIR%\Scripts\activate.bat" >nul 2>&1
