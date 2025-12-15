@@ -1,0 +1,12 @@
+# Sphinx build files
+_build/
+
+
+# Auto-generated API docs
+apidocs/
+
+# Python
+*.pyc
+__pycache__/
+*.py[cod]
+*$py.class

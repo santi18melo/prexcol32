@@ -1,0 +1,27 @@
+[build]
+  # Directory that contains the package.json
+  base = "frontend"
+  
+  # Directory that contains the build output (relative to base)
+  publish = "dist"
+  
+  # Build command
+  command = "npm install && npm run build"
+
+[build.environment]
+  NODE_VERSION = "20"
+  NPM_FLAGS = "--legacy-peer-deps"
+
+# Redirects for Single Page Application (SPA)
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+# Optional: Proxy /api requests to backend to avoid CORS issues
+# Uncomment and replace URL when backend is deployed
+# [[redirects]]
+#   from = "/api/*"
+#   to = "https://prexcol-backend.railway.app/api/:splat"
+#   status = 200
+#   force = true
