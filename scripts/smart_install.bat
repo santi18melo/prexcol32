@@ -37,10 +37,22 @@ set "FRONT_DIR=%ROOT_DIR%\src\frontend"
 if not exist "%FRONT_DIR%\node_modules" (
     echo [SETUP] Instalando modulos Frontend - primera vez...
     cd /d "%FRONT_DIR%"
+    
+    REM Intento 1: Standard
     call npm install --no-audit --no-fund --quiet
+    if errorlevel 1 (
+        echo [WARN] Fallo instalacion estandar. Reintentando con legacy-peer-deps...
+        call npm install --legacy-peer-deps --no-audit --no-fund --quiet
+        if errorlevel 1 (
+            echo [ERROR] Fallo critico en instalacion de Frontend. Revisa los logs.
+            cd /d "%ROOT_DIR%"
+            exit /b 1
+        )
+    )
+    
     cd /d "%ROOT_DIR%"
 ) else (
-    REM Check rápido opcional
+    REM Check rapido opcional
     echo [CHECK] Frontend listo.
 )
 
