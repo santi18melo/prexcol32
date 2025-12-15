@@ -98,6 +98,14 @@ call :run_verification "Verifying Python Runtime" "!CMD_CHECK!"
 :STEP_3_DEPS
 call :update_progress "Checking Backend Dependencies"
 
+REM SMART OPTIMIZATION: If marker exists and is recent (conceptually), skip heavy checks
+if exist "%VENV_DIR%\.install_marker" (
+    if "%USING_EMBED%"=="1" (
+        goto :VERIFY_DEPS
+    )
+)
+
+:RUN_DEPS_CHECK
 REM Python Check
 "%PYTHON_EXE%" -c "import os, sys; req='%ROOT_DIR%\requirements.txt'; mark='%VENV_DIR%\.deps_mark'; sys.exit(0 if os.path.exists(mark) and os.path.getmtime(req) <= os.path.getmtime(mark) else 1)"
 
