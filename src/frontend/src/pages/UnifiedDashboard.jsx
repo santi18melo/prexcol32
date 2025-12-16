@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import { useTranslation } from "../context/I18nContext";
 import OrderService from "../services/orderService";
 import { axiosInstance } from "../services/api";
 import "../styles/CompradorDashboard.css"; // Reusing styles for now
@@ -9,6 +10,7 @@ import ModalDetallePedido from "../components/ModalDetallePedido";
 
 export default function UnifiedDashboard() {
   const { user, logout } = useAuth();
+  const { t } = useTranslation();
   const navigate = useNavigate();
   // Determine role for UI adjustments
   // Unified role: Logistica handles everything now
@@ -20,6 +22,16 @@ export default function UnifiedDashboard() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [selectedPedido, setSelectedPedido] = useState(null);
+  const [searchTerm, setSearchTerm] = useState("");
+
+  const filteredPedidos = pedidos.filter(p => {
+    if (!searchTerm) return true;
+    const term = searchTerm.toLowerCase();
+    const idMatch = p.id.toString().includes(term);
+    const clientMatch = p.cliente_nombre?.toLowerCase().includes(term);
+    const storeMatch = p.tienda_nombre?.toLowerCase().includes(term);
+    return idMatch || clientMatch || storeMatch;
+  });
 
   // ==================== CARGAR PEDIDOS ====================
   const cargarPedidos = useCallback(async () => {
@@ -27,53 +39,84 @@ export default function UnifiedDashboard() {
     setError("");
     try {
       let data = [];
-      // Fetch based on active tab
-      if (activeTab === "pendiente") {
-        const res = await OrderService.getPendingOrders();
-        data = res.results || res;
-      } else if (activeTab === "preparando") {
-        const res = await OrderService.getOrdersInPreparation();
-        data = res.results || res;
-      } else if (activeTab === "en_transito") {
-        const res = await axiosInstance.get("/productos/pedidos/");
-        const allPedidos = res.data.results || res.data;
-        data = allPedidos.filter(p => p.estado === "en_transito");
-      } else if (activeTab === "entregado") {
-         const res = await axiosInstance.get("/productos/pedidos/");
-         const allPedidos = res.data.results || res.data;
-         data = allPedidos.filter(p => p.estado === "entregado");
+      
+      if (isLogistica) {
+        // Use the unified endpoint for logistics to get all statuses
+        // This avoids issues with pagination hiding items in specific statuses when using generic endpoints
+        const res = await OrderService.getLogisticsPanelOrders();
+        const allPedidos = res.results || res;
+        
+        // Filter locally based on activeTab
+        if (activeTab === "pendiente") {
+             data = allPedidos.filter(p => p.estado === "pendiente");
+        } else if (activeTab === "preparando") {
+             data = allPedidos.filter(p => p.estado === "preparando");
+        } else if (activeTab === "en_transito") {
+             data = allPedidos.filter(p => p.estado === "en_transito");
+        } else if (activeTab === "entregado") {
+             data = allPedidos.filter(p => p.estado === "entregado");
+        } else {
+             data = allPedidos; 
+        }
+      } else {
+        // Fallback for non-logistics (e.g. Admin view specific or others) - though this component seems logistics focused now
+        // Existing logic for safety
+        if (activeTab === "pendiente") {
+             const res = await OrderService.getPendingOrders();
+             data = res.results || res;
+        } else if (activeTab === "preparando") {
+             const res = await OrderService.getOrdersInPreparation();
+             data = res.results || res;
+        } else {
+             const res = await axiosInstance.get("/productos/pedidos/");
+             const allPedidos = res.data.results || res.data;
+             data = allPedidos.filter(p => p.estado === activeTab);
+        }
       }
 
       setPedidos(Array.isArray(data) ? data : []);
     } catch (err) {
       console.error("Error cargando pedidos:", err);
       if (err.response?.status !== 403) {
-          setError("Error al cargar pedidos. " + (err.response?.data?.detail || ""));
+          setError(t('errors.loadingOrders') + " " + (err.response?.data?.detail || ""));
       } else {
           setPedidos([]); // Clear if no permission
       }
     } finally {
       setLoading(false);
     }
-  }, [activeTab]);
+  }, [activeTab, isLogistica]);
 
   useEffect(() => {
     cargarPedidos();
   }, [cargarPedidos]);
 
+  // ==================== HELPER - TRADUCIR ESTADOS ====================
+  const getStatusLabel = (status) => {
+    const statusMap = {
+      'pendiente': t('orders.status.pending'),
+      'preparando': t('orders.status.preparing'),
+      'en_transito': t('orders.status.inTransit'),
+      'entregado': t('orders.status.delivered'),
+      'cancelado': t('orders.status.cancelled')
+    };
+    return statusMap[status] || status;
+  };
+
   // ==================== CAMBIAR ESTADO ====================
   const handleCambiarEstado = async (pedidoId, nuevoEstado) => {
-    if (!window.confirm(`¿Cambiar pedido #${pedidoId} a estado "${nuevoEstado}"?`)) {
+    if (!window.confirm(t('messages.confirmStatusChange', { id: pedidoId, status: getStatusLabel(nuevoEstado) }))) {
       return;
     }
 
+    setError("");
     try {
       await OrderService.updateOrderStatus(pedidoId, nuevoEstado);
-      setSuccess(`✓ Pedido #${pedidoId} actualizado a ${nuevoEstado}`);
+      setSuccess(t('orders.updateSuccess', { id: pedidoId, status: getStatusLabel(nuevoEstado) }));
       await cargarPedidos();
       setTimeout(() => setSuccess(""), 3000);
     } catch (err) {
-      setError(err.response?.data?.error || "Error al cambiar estado del pedido");
+      setError(err.response?.data?.error || t('errors.changingStatus'));
       setTimeout(() => setError(""), 5000);
     }
   };
@@ -86,7 +129,7 @@ export default function UnifiedDashboard() {
           className="btn-action btn-preparar"
           onClick={() => handleCambiarEstado(pedido.id, "preparando")}
         >
-          ⚙️ Iniciar Preparación
+          ⚙️ {t('orders.actions.startPreparation')}
         </button>
       );
     }
@@ -96,7 +139,7 @@ export default function UnifiedDashboard() {
           className="btn-action btn-listo"
           onClick={() => handleCambiarEstado(pedido.id, "en_transito")}
         >
-          🚚 Iniciar Envío
+          🚚 {t('orders.actions.startShipping')}
         </button>
       );
     }
@@ -106,7 +149,7 @@ export default function UnifiedDashboard() {
           className="btn-action btn-entregado"
           onClick={() => handleCambiarEstado(pedido.id, "entregado")}
         >
-          ✓ Marcar Entregado
+          ✓ {t('orders.actions.markDelivered')}
         </button>
       );
     }
@@ -115,7 +158,7 @@ export default function UnifiedDashboard() {
 
   return (
     <div className="comprador-dashboard"> {/* Reusing class for layout */}
-      <DashboardHeader title="⚡ Centro de Operaciones" />
+      <DashboardHeader title={`⚡ ${t('dashboard.operationsCenter')}`} />
 
       {/* ALERTS */}
       {error && <div className="alert alert-error"><span>⚠️</span> {error}</div>}
@@ -129,65 +172,78 @@ export default function UnifiedDashboard() {
                 className={`tab ${activeTab === "pendiente" ? "active" : ""}`}
                 onClick={() => setActiveTab("pendiente")}
             >
-                📋 Pendientes
+                📋 {t('tabs.pending')}
             </button>
           )}
           <button
             className={`tab ${activeTab === "preparando" ? "active" : ""}`}
             onClick={() => setActiveTab("preparando")}
           >
-            ⚙️ En Preparación
+            ⚙️ {t('tabs.preparing')}
           </button>
           <button
             className={`tab ${activeTab === "en_transito" ? "active" : ""}`}
             onClick={() => setActiveTab("en_transito")}
           >
-            🚚 En Tránsito
+            🚚 {t('tabs.inTransit')}
           </button>
           <button
             className={`tab ${activeTab === "entregado" ? "active" : ""}`}
             onClick={() => setActiveTab("entregado")}
           >
-            ✅ Entregados
+            ✅ {t('tabs.delivered')}
           </button>
         </div>
       </div>
 
       {/* LISTA DE PEDIDOS */}
       <div className="pedidos-container" style={{ marginTop: 20 }}>
-        <div className="section-header">
+        <div className="section-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '15px' }}>
             <h2>
-                {activeTab === "pendiente" && "Pedidos Nuevos"}
-                {activeTab === "preparando" && "Pedidos en Preparación"}
-                {activeTab === "en_transito" && "Pedidos en Ruta"}
-                {activeTab === "entregado" && "Historial de Entregas"}
+                <span key={activeTab}>
+                    {activeTab === "pendiente" ? t('dashboard.logistics.newOrders') :
+                     activeTab === "preparando" ? t('dashboard.logistics.inPreparation') :
+                     activeTab === "en_transito" ? t('dashboard.logistics.inRoute') :
+                     t('dashboard.logistics.deliveryHistory')}
+                </span>
             </h2>
-            <button onClick={cargarPedidos} className="btn-refresh">
-                🔄 Actualizar
-            </button>
+
+            <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                <input 
+                    type="text" 
+                    placeholder={t('search.placeholder')} 
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    style={{ padding: '8px 12px', borderRadius: '6px', border: '1px solid #ccc', minWidth: '200px' }}
+                />
+                
+                <button onClick={cargarPedidos} className="btn-refresh">
+                    🔄 {t('common.refresh')}
+                </button>
+            </div>
         </div>
 
         {loading ? (
              <div className="loading-container">
                 <div className="spinner"></div>
-                <p>Cargando...</p>
+                <p>{t('common.loading')}</p>
              </div>
-        ) : pedidos.length === 0 ? (
+        ) : filteredPedidos.length === 0 ? (
           <div className="empty-state">
             <div className="empty-icon">📭</div>
-            <h3>No hay pedidos en esta sección</h3>
+            <h3>{searchTerm ? t('orders.noResults') : t('orders.noOrders')}</h3>
           </div>
         ) : (
           <div className="pedidos-grid">
-            {pedidos.map((pedido) => (
+            {filteredPedidos.map((pedido) => (
               <div key={pedido.id} className="pedido-card">
                 <div className="pedido-header">
                   <div className="pedido-id">
-                    <span className="label">Pedido</span>
+                    <span className="label">{t('orders.order')}</span>
                     <span className="value">#{pedido.id}</span>
                   </div>
                   <span className={`badge badge-${pedido.estado}`}>
-                    {pedido.estado}
+                    {getStatusLabel(pedido.estado)}
                   </span>
                 </div>
 
@@ -195,28 +251,28 @@ export default function UnifiedDashboard() {
                   <div className="info-row">
                     <span className="icon">👤</span>
                     <div className="info-content">
-                      <span className="label">Cliente</span>
+                      <span className="label">{t('common.client')}</span>
                       <span className="value">{pedido.cliente_nombre || "N/A"}</span>
                     </div>
                   </div>
                   <div className="info-row">
                     <span className="icon">🏪</span>
                     <div className="info-content">
-                      <span className="label">Tienda</span>
+                      <span className="label">{t('common.store')}</span>
                       <span className="value">{pedido.tienda_nombre || "N/A"}</span>
                     </div>
                   </div>
                   <div className="info-row">
                     <span className="icon">💰</span>
                     <div className="info-content">
-                      <span className="label">Total</span>
+                      <span className="label">{t('common.total')}</span>
                       <span className="value total">${Number(pedido.total).toFixed(2)}</span>
                     </div>
                   </div>
                   <div className="info-row">
                     <span className="icon">📅</span>
                     <div className="info-content">
-                      <span className="label">Fecha</span>
+                      <span className="label">{t('common.date')}</span>
                       <span className="value">
                         {new Date(pedido.fecha_creacion).toLocaleString()}
                       </span>
@@ -226,7 +282,7 @@ export default function UnifiedDashboard() {
                     <div className="info-row">
                         <span className="icon">📝</span>
                         <div className="info-content">
-                            <span className="label">Notas</span>
+                            <span className="label">{t('common.notes')}</span>
                             <span className="value">{pedido.notas}</span>
                         </div>
                     </div>
@@ -239,7 +295,7 @@ export default function UnifiedDashboard() {
                     onClick={() => setSelectedPedido(pedido)}
                     style={{ background: '#64748b', color: 'white', marginRight: '8px' }}
                   >
-                    👁️ Ver Detalle
+                    👁️ {t('orders.actions.viewDetails')}
                   </button>
                   {renderActions(pedido)}
                 </div>

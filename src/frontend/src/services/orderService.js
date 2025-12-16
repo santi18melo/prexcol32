@@ -111,6 +111,19 @@ const OrderService = {
   },
 
   /**
+   * Get all logistics orders (Consolidated panel)
+   */
+  async getLogisticsPanelOrders(params = {}) {
+    try {
+      const response = await axiosInstance.get("/productos/pedidos/panel_logistica/", { params });
+      return response.data;
+    } catch (error) {
+      console.error("Error fetching logistics panel orders:", error);
+      throw error;
+    }
+  },
+
+  /**
    * Get order details items
    * Typically the order object includes details, but there is an endpoint too.
    */

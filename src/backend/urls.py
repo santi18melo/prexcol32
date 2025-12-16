@@ -43,9 +43,19 @@ urlpatterns = [
     path('', api_root, name='api-root'),
     
     
-    # Documentation - Only /api/docs/
+    
+    # API Documentation (Swagger/Redoc)
+    re_path(r'^api/docs/swagger(?P<format>\.json|\.yaml)$', schema_view.without_ui(cache_timeout=0), name='schema-json'),
+    path('api/docs/swagger/', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
+    path('api/docs/redoc/', schema_view.with_ui('redoc', cache_timeout=0), name='schema-redoc'),
+
+    # Project Documentation (Sphinx)
     path('api/docs/', serve_docs),
     re_path(r'^api/docs/(?P<path>.*)$', serve, {'document_root': DOCS_ROOT}),
+    
+    # Documentation Alias - /docs/
+    path('docs/', serve_docs),
+    re_path(r'^docs/(?P<path>.*)$', serve, {'document_root': DOCS_ROOT}),
     # Observability & Maps
     path('metrics/', metrics_view, name='metrics'),
     path('maps/logistica/', logistics_map_data, name='logistics_map'),

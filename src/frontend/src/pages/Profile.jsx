@@ -1,11 +1,13 @@
 // src/pages/Profile.jsx
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "../context/I18nContext";
 import UserService from "../services/userService";
 import Loader from "../components/Loader";
 import "../styles/Profile.css";
 
 export default function Profile() {
+  const { t } = useTranslation();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
@@ -47,7 +49,7 @@ export default function Profile() {
       }
     } catch (err) {
       console.error("Error loading profile:", err);
-      setError("Error al cargar el perfil. Intente nuevamente.");
+      setError(t('errors.generic'));
     } finally {
       setLoading(false);
     }
@@ -75,10 +77,10 @@ export default function Profile() {
     try {
       // Validate form
       if (!profileData.nombre.trim()) {
-        throw new Error("El nombre es requerido");
+        throw new Error(t('validation.required'));
       }
       if (!profileData.email.trim()) {
-        throw new Error("El email es requerido");
+        throw new Error(t('validation.email'));
       }
 
       // Prepare FormData
@@ -109,7 +111,7 @@ export default function Profile() {
         setPreviewImage(updated.imagen);
       }
 
-      setSuccess("Perfil actualizado correctamente");
+      setSuccess(t('profile.updateSuccess'));
       setEditing(false);
 
       // Clear success message after 3 seconds
@@ -140,10 +142,10 @@ export default function Profile() {
     <div className="profile-container">
       <div className="profile-card">
         <div className="profile-header-section">
-          <h2>👤 Mi Perfil</h2>
+          <h2>👤 {t('users.myProfile')}</h2>
           {!editing && (
             <button onClick={() => setEditing(true)} className="btn-edit-profile">
-              ✏️ Editar
+              ✏️ {t('common.edit')}
             </button>
           )}
         </div>
@@ -166,7 +168,7 @@ export default function Profile() {
                   )}
                   
                   {editing && (
-                    <label htmlFor="imagen-upload" className="image-upload-btn" title="Cambiar foto">
+                    <label htmlFor="imagen-upload" className="image-upload-btn" title={t('profile.changePhoto')}>
                       <span>📷</span>
                       <input
                         id="imagen-upload"
@@ -195,7 +197,7 @@ export default function Profile() {
             {/* Form Fields */}
             <div className="profile-form-grid">
               <div className="form-group">
-                <label>Nombre Completo *</label>
+                <label>{t('profile.fullName')} *</label>
                 <input
                   type="text"
                   name="nombre"
@@ -208,7 +210,7 @@ export default function Profile() {
               </div>
 
               <div className="form-group">
-                <label>Email *</label>
+                <label>{t('common.email')} *</label>
                 <input
                   type="email"
                   name="email"
@@ -221,7 +223,7 @@ export default function Profile() {
               </div>
 
               <div className="form-group">
-                <label>Teléfono</label>
+                <label>{t('common.phone')}</label>
                 <input
                   type="tel"
                   name="telefono"
@@ -229,12 +231,12 @@ export default function Profile() {
                   onChange={handleInputChange}
                   disabled={!editing}
                   className="form-input"
-                  placeholder="Ej: +57 300 1234567"
+                  placeholder={t('profile.phonePlaceholder')}
                 />
               </div>
 
               <div className="form-group">
-                <label>Rol</label>
+                <label>{t('users.role')}</label>
                 <input
                   type="text"
                   name="rol"
@@ -245,7 +247,7 @@ export default function Profile() {
               </div>
 
               <div className="form-group full-width">
-                <label>Dirección</label>
+                <label>{t('common.address')}</label>
                 <textarea
                   name="direccion"
                   value={profileData.direccion}
@@ -253,7 +255,7 @@ export default function Profile() {
                   disabled={!editing}
                   rows="3"
                   className="form-input form-textarea"
-                  placeholder="Ingrese su dirección completa"
+                  placeholder={t('profile.addressPlaceholder')}
                 />
               </div>
             </div>
@@ -267,10 +269,10 @@ export default function Profile() {
                   className="btn-cancel"
                   disabled={saving}
                 >
-                  Cancelar
+                  {t('common.cancel')}
                 </button>
                 <button type="submit" className="btn-save" disabled={saving}>
-                  {saving ? "Guardando..." : "💾 Guardar Cambios"}
+                  {saving ? t('common.saving') : `💾 ${t('common.save')}`}
                 </button>
               </div>
             )}
@@ -278,7 +280,7 @@ export default function Profile() {
 
           <div className="back-section">
             <button onClick={() => navigate(-1)} className="btn-back">
-              ← Volver
+              ← {t('common.back')}
             </button>
           </div>
         </div>

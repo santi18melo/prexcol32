@@ -104,13 +104,33 @@ export default function DashboardAdmin() {
   }, []);
 
   // Handlers
+  // Helper helper to format errors
+  const getErrorMessage = (error) => {
+      if (error.response?.data) {
+          const data = error.response.data;
+          if (typeof data === 'string') return data;
+          if (data.detail) return data.detail;
+          
+          // Combine all field errors
+          return Object.entries(data)
+              .map(([key, value]) => {
+                  const message = Array.isArray(value) ? value.join(' ') : value;
+                  // Capitalize field name
+                  const fieldName = key.charAt(0).toUpperCase() + key.slice(1);
+                  return `${fieldName}: ${message}`;
+              })
+              .join('\n');
+      }
+      return error.message || "Error desconocido";
+  };
+
   const handleUserCreate = async (data) => {
     try {
         await UserService.createUser(data);
         await fetchData();
     } catch (error) {
         console.error("Failed to create user:", error);
-        alert("Error al crear usuario: " + (error.response?.data?.detail || error.message));
+        alert("Error al crear usuario:\n" + getErrorMessage(error));
     }
   };
 
@@ -121,7 +141,7 @@ export default function DashboardAdmin() {
         await fetchData();
     } catch (error) {
         console.error("Failed to update user:", error);
-        alert("Error al actualizar usuario: " + (error.response?.data?.detail || error.message));
+        alert("Error al actualizar usuario:\n" + getErrorMessage(error));
     }
   };
 
@@ -132,7 +152,7 @@ export default function DashboardAdmin() {
         await fetchData();
     } catch (error) {
         console.error("Failed to delete user:", error);
-         alert("Error al eliminar usuario: " + (error.response?.data?.detail || error.message));
+         alert("Error al eliminar usuario:\n" + getErrorMessage(error));
     }
   };
   
@@ -203,6 +223,7 @@ export default function DashboardAdmin() {
                <div className="stat-content">
                  <h3>{stats.users}</h3>
                  <p>Usuarios</p>
+                 <span className="stat-detail">Registrados</span>
                </div>
              </div>
              <div className="stat-card">
@@ -210,6 +231,7 @@ export default function DashboardAdmin() {
                <div className="stat-content">
                  <h3>{stats.stores}</h3>
                  <p>Tiendas</p>
+                 <span className="stat-detail">Activas</span>
                </div>
              </div>
              <div className="stat-card">
@@ -217,6 +239,7 @@ export default function DashboardAdmin() {
                <div className="stat-content">
                  <h3>{stats.products}</h3>
                  <p>Productos</p>
+                 <span className="stat-detail">En catálogo</span>
                </div>
              </div>
              <div className="stat-card">
@@ -224,6 +247,7 @@ export default function DashboardAdmin() {
                <div className="stat-content">
                  <h3>{stats.orders}</h3>
                  <p>Pedidos</p>
+                 <span className="stat-detail">Totales</span>
                </div>
              </div>
           </div>

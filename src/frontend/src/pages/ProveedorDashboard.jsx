@@ -40,6 +40,24 @@ export default function ProveedorDashboard() {
     stockBajo: false
   });
 
+  // ==================== CARGAR VENTAS ====================
+  const [ventas, setVentas] = useState([]);
+  const [totalVendido, setTotalVendido] = useState(0);
+
+  const cargarVentas = useCallback(async () => {
+    try {
+      const res = await axiosInstance.get('/ventas/mis_ventas_proveedor/');
+      setVentas(res.data.ventas || []);
+      setTotalVendido(res.data.total_historico || 0);
+    } catch (err) {
+      console.error("Error cargando ventas:", err);
+    }
+  }, []);
+
+  useEffect(() => {
+    cargarVentas();
+  }, [cargarVentas]);
+
   // ==================== CARGAR DATOS ====================
   const cargarProductos = useCallback(async () => {
     try {
@@ -184,23 +202,7 @@ export default function ProveedorDashboard() {
     );
   }
 
-  // ==================== CARGAR VENTAS ====================
-  const [ventas, setVentas] = useState([]);
-  const [totalVendido, setTotalVendido] = useState(0);
 
-  const cargarVentas = useCallback(async () => {
-    try {
-      const res = await axiosInstance.get('/ventas/mis_ventas_proveedor/');
-      setVentas(res.data.ventas || []);
-      setTotalVendido(res.data.total_historico || 0);
-    } catch (err) {
-      console.error("Error cargando ventas:", err);
-    }
-  }, []);
-
-  useEffect(() => {
-    cargarVentas();
-  }, [cargarVentas]);
 
   return (
     <div className="proveedor-dashboard">

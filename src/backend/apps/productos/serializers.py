@@ -62,11 +62,14 @@ class ProductoListSerializer(serializers.ModelSerializer):
 
 
 class DetallePedidoSerializer(serializers.ModelSerializer):
+    producto_nombre = serializers.ReadOnlyField(source='producto.nombre')
+
     class Meta:
         model = DetallePedido
         fields = [
             "id",
             "producto",
+            "producto_nombre",
             "cantidad",
             "precio_unitario",
             "subtotal",
@@ -77,6 +80,8 @@ class PedidoSerializer(serializers.ModelSerializer):
     cliente = UsuarioSerializer(read_only=True)
     tienda = TiendaSerializer(read_only=True)
     detalles = DetallePedidoSerializer(many=True, read_only=True)
+    cliente_nombre = serializers.ReadOnlyField(source='cliente.nombre')
+    tienda_nombre = serializers.ReadOnlyField(source='tienda.nombre')
 
     class Meta:
         model = Pedido
@@ -112,12 +117,13 @@ class PedidoUpdateEstadoSerializer(serializers.ModelSerializer):
 
 
 class PedidoListSerializer(serializers.ModelSerializer):
-    cliente = UsuarioSerializer(read_only=True)
-    tienda = TiendaSerializer(read_only=True)
+    cliente_nombre = serializers.ReadOnlyField(source='cliente.nombre')
+    tienda_nombre = serializers.ReadOnlyField(source='tienda.nombre')
     
     class Meta:
         model = Pedido
-        fields = ["id", "cliente", "tienda", "estado", "fecha_creacion", "total", "notas"]
+        fields = ["id", "cliente", "cliente_nombre", "tienda", "tienda_nombre", "estado", 
+                  "fecha_creacion", "fecha_actualizacion", "total", "notas"]
 
 
 class SeccionSerializer(serializers.ModelSerializer):

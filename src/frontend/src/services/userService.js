@@ -104,6 +104,33 @@ const UserService = {
         throw error;
     }
   },
+
+  /**
+   * Change user password
+   * @param {Object} passwordData - { old_password, new_password }
+   */
+  async changePassword(passwordData) {
+    try {
+      const response = await axiosInstance.post("/usuarios/change-password/", passwordData);
+      return response.data;
+    } catch (error) {
+      console.error("Error changing password:", error);
+      throw error;
+    }
+  },
+
+  /**
+   * Deactivate current user account
+   */
+  async deactivateAccount() {
+    try {
+      const response = await axiosInstance.post("/usuarios/deactivate/");
+      return response.data;
+    } catch (error) {
+      console.error("Error deactivating account:", error);
+      throw error;
+    }
+  },
 };
 
 export default UserService;

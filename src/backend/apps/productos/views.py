@@ -3,6 +3,9 @@ from rest_framework.views import APIView
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
+from django.utils import timezone
+from django.http import HttpResponse
+from django.shortcuts import get_object_or_404
 
 from .models import Tienda, Producto, Pedido, DetallePedido, Seccion, StockConfig
 from .serializers import (
@@ -321,6 +324,8 @@ class PedidoViewSet(viewsets.ModelViewSet):
             permission_classes = [IsAdmin | IsLogistica]
         elif self.action == "destroy":
             permission_classes = [IsAdmin]
+        elif self.action == "pdf_factura":
+            permission_classes = [permissions.AllowAny]
         else:
             permission_classes = [IsAuthenticated]
         return [permission() for permission in permission_classes]
@@ -388,6 +393,200 @@ class PedidoViewSet(viewsets.ModelViewSet):
              return self.get_paginated_response(serializer.data)
         serializer = PedidoListSerializer(pedidos, many=True)
         return Response(serializer.data)
+
+    @action(detail=False, methods=["get"], permission_classes=[IsLogistica])
+    def panel_logistica(self, request):
+        """
+        Endpoint consolidad para el panel de logística.
+        Retorna TODOS los pedidos relevantes para el flujo logístico:
+        Pendientes, Preparando, En Tránsito y Entregados (Historial).
+        """
+        pedidos = Pedido.objects.filter(
+            estado__in=["pendiente", "preparando", "en_transito", "entregado"]
+        ).order_by("-fecha_creacion")
+        
+        page = self.paginate_queryset(pedidos)
+        if page is not None:
+             serializer = PedidoListSerializer(page, many=True)
+             return self.get_paginated_response(serializer.data)
+        serializer = PedidoListSerializer(pedidos, many=True)
+        return Response(serializer.data)
+
+    @action(detail=True, methods=["get"], permission_classes=[permissions.AllowAny], authentication_classes=[])
+    def pdf_factura(self, request, pk=None):
+        """
+        Genera/Renderiza la factura en HTML simple para visualización/impresión.
+        """
+        from apps.ventas.models import Venta
+        pedido = get_object_or_404(Pedido, pk=pk)
+        
+        # Intentar obtener la venta asociada
+        try:
+            venta = Venta.objects.get(pedido=pedido)
+            folio = f"F-{venta.id:06d}"
+            fecha = venta.fecha_venta.strftime("%d/%m/%Y %H:%M")
+        except Venta.DoesNotExist:
+            return HttpResponse("Factura no encontrada.", status=404)
+
+        rows_html = ""
+        for detalle in pedido.detalles.all():
+            rows_html += f"""
+                    <tr>
+                        <td style="border-bottom: 1px solid #eee; padding: 12px; font-size: 14px;">{detalle.producto.nombre}</td>
+                        <td style="border-bottom: 1px solid #eee; padding: 12px; font-size: 14px; text-align: right;">{detalle.cantidad}</td>
+                        <td style="border-bottom: 1px solid #eee; padding: 12px; font-size: 14px; text-align: right;">${detalle.precio_unitario}</td>
+                        <td style="border-bottom: 1px solid #eee; padding: 12px; font-size: 14px; text-align: right;">${detalle.subtotal}</td>
+                    </tr>
+            """
+
+        html_content = f"""
+        <!DOCTYPE html>
+        <html lang="es">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Factura {folio}</title>
+            <style>
+                body {{ font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; color: #555; line-height: 1.6; margin: 0; padding: 0; background-color: #f5f5f5; }}
+                .invoice-box {{ max-width: 800px; margin: 40px auto; padding: 40px; border: 1px solid #eee; box-shadow: 0 0 10px rgba(0, 0, 0, 0.15); background-color: #fff; border-radius: 8px; }}
+                .header {{ display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 40px; border-bottom: 2px solid #333; padding-bottom: 20px; }}
+                .header-title h1 {{ margin: 0; font-size: 32px; color: #333; text-transform: uppercase; letter-spacing: 2px; }}
+                .header-title p {{ margin: 5px 0 0; color: #777; font-size: 14px; }}
+                .header-meta {{ text-align: right; }}
+                .header-meta p {{ margin: 5px 0; font-size: 14px; color: #555; }}
+                .client-section {{ background-color: #f9f9f9; padding: 25px; border-radius: 6px; margin-bottom: 40px; display: flex; justify-content: space-between; }}
+                .client-col h3 {{ margin-top: 0; font-size: 14px; text-transform: uppercase; color: #888; letter-spacing: 1px; margin-bottom: 10px; }}
+                .client-col p {{ margin: 3px 0; font-size: 15px; color: #333; font-weight: 500; }}
+                table {{ width: 100%; border-collapse: collapse; margin-bottom: 30px; }}
+                th {{ background-color: #333; color: #fff; text-align: left; padding: 12px; font-weight: 600; text-transform: uppercase; font-size: 12px; letter-spacing: 1px; }}
+                th.text-right {{ text-align: right; }}
+                .total-section {{ display: flex; justify-content: flex-end; align-items: center; margin-top: 20px; padding-top: 20px; border-top: 2px solid #333; }}
+                .total-label {{ font-size: 16px; color: #777; margin-right: 20px; font-weight: bold; text-transform: uppercase; }}
+                .total-value {{ font-size: 28px; font-weight: bold; color: #333; }}
+                .footer {{ margin-top: 60px; text-align: center; font-size: 12px; color: #aaa; border-top: 1px solid #eee; padding-top: 20px; }}
+                @media print {{
+                    body {{ background-color: #fff; -webkit-print-color-adjust: exact; }}
+                    .invoice-box {{ box-shadow: none; border: none; margin: 0; padding: 0; max-width: 100%; }}
+                    .client-section {{ background-color: #f9f9f9 !important; -webkit-print-color-adjust: exact; }}
+                    th {{ background-color: #333 !important; color: #fff !important; -webkit-print-color-adjust: exact; }}
+                }}
+            </style>
+        </head>
+        <body>
+            <div class="invoice-box">
+                <div class="header">
+                    <div class="header-title">
+                        <h1>Factura {folio}</h1>
+                        <p style="margin-bottom: 5px; font-weight: bold;">Prex Col</p>
+                        <p style="margin: 0; font-size: 12px; color: #666;">Email: prexcoloficial@gmail.com</p>
+                        <p style="margin: 0; font-size: 12px; color: #666;">Tel: +57 324 664 8181</p>
+                    </div>
+                    <div class="header-meta">
+                        <p><strong>NIT:</strong> 900.123.456-7</p>
+                        <p><strong>Fecha:</strong> {fecha}</p>
+                        <p><strong>Estado:</strong> {pedido.estado.upper()}</p>
+                    </div>
+                </div>
+                
+                <div class="client-section">
+                    <div class="client-col">
+                        <h3>Facturado A</h3>
+                        <p>{pedido.cliente.nombre}</p>
+                        <p style="font-size: 13px; color: #666;">{pedido.cliente.email}</p>
+                    </div>
+                    <div class="client-col" style="text-align: right;">
+                        <h3>Tienda</h3>
+                        <p>{pedido.tienda.nombre}</p>
+                    </div>
+                </div>
+                
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Producto</th>
+                            <th class="text-right">Cant.</th>
+                            <th class="text-right">Precio Unit.</th>
+                            <th class="text-right">Subtotal</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {rows_html}
+                    </tbody>
+                </table>
+                
+                <div class="total-section">
+                    <span class="total-label">Total a Pagar</span>
+                    <span class="total-value">${pedido.total}</span>
+                </div>
+                
+                <div class="footer">
+                    <p>Gracias por su compra.</p>
+                    <p>Este documento es una representación impresa de un comprobante digital emitido por Prex Col.</p>
+                </div>
+            </div>
+            
+            <script>
+                // Auto print after short delay to ensure rendering
+                setTimeout(() => window.print(), 500);
+            </script>
+        </body>
+        </html>
+        """
+        
+        return HttpResponse(html_content, content_type="text/html; charset=utf-8")
+
+    @action(detail=True, methods=["post"], permission_classes=[IsAuthenticated])
+    def generar_factura(self, request, pk=None):
+        from apps.ventas.models import Venta
+        pedido = self.get_object()
+        
+        if pedido.estado != 'entregado' and not request.user.is_superuser:
+            return Response(
+                {"error": "Solo se pueden generar facturas de pedidos entregados"}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Verificar si ya existe venta/factura
+        venta, created = Venta.objects.get_or_create(
+            pedido=pedido,
+            defaults={
+                'cliente': pedido.cliente,
+                'total': pedido.total,
+                # 'cantidad_items': pedido.detalles.count() # Si el modelo lo requiere
+            }
+        )
+        
+        # Generar folio virtual basado en ID de venta
+        folio = f"F-{venta.id:06d}"
+        pdf_path = f"/api/productos/pedidos/{pedido.id}/pdf_factura/"
+        pdf_url = request.build_absolute_uri(pdf_path)
+        
+        return Response({
+            "mensaje": "Factura generada exitosamente",
+            "numero_factura": folio,
+            "archivo_pdf": pdf_url,
+            "fecha_emision": venta.fecha_venta
+        })
+
+    @action(detail=True, methods=["get"], permission_classes=[IsAuthenticated])
+    def ver_factura(self, request, pk=None):
+        """
+        Retorna la info de la factura si existe
+        """
+        from apps.ventas.models import Venta
+        pedido = self.get_object()
+        try:
+            venta = Venta.objects.get(pedido=pedido)
+            folio = f"F-{venta.id:06d}"
+            pdf_path = f"/api/productos/pedidos/{pedido.id}/pdf_factura/"
+            pdf_url = request.build_absolute_uri(pdf_path)
+            return Response({
+                "numero_factura": folio,
+                "archivo_pdf": pdf_url,
+                "fecha_emision": venta.fecha_venta
+            })
+        except Venta.DoesNotExist:
+            return Response({"error": "Factura no generada"}, status=status.HTTP_404_NOT_FOUND)
 
 
 # ======================== DETALLE PEDIDO VIEWSET ========================

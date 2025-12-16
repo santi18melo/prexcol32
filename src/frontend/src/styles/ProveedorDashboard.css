@@ -1,19 +1,21 @@
 /* Proveedor Dashboard - Professional Styles */
+@import './variables.css';
 
 .proveedor-dashboard {
   min-height: 100vh;
-  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background: var(--bg-secondary);
+  font-family: var(--font-family);
 }
 
 /* Reutilizar estilos de header, stats, alerts del Comprador Dashboard */
 .proveedor-header {
-  background: white;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+  background: var(--bg-secondary);
+  box-shadow: var(--shadow-md);
   padding: 20px 40px;
   position: sticky;
   top: 0;
   z-index: 100;
+  border-bottom: 1px solid var(--border-light);
 }
 
 .proveedor-header .header-content {
@@ -30,17 +32,18 @@
   font-weight: 700;
   background: linear-gradient(135deg, #10b981 0%, #059669 100%);
   -webkit-background-clip: text;
+  background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 
 .proveedor-header .header-left p {
   margin: 0;
-  color: #718096;
+  color: var(--text-tertiary);
   font-size: 14px;
 }
 
 .proveedor-header strong {
-  color: #2d3748;
+  color: var(--text-primary);
   font-weight: 600;
 }
 
@@ -62,7 +65,7 @@
   margin: 0;
   font-size: 24px;
   font-weight: 700;
-  color: #1a202c;
+  color: var(--text-primary);
 }
 
 .btn-primary {
@@ -85,18 +88,19 @@
 
 /* Form Card */
 .form-card {
-  background: white;
+  background: var(--bg-primary);
   border-radius: 16px;
   padding: 30px;
   margin-bottom: 30px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  box-shadow: var(--shadow-lg);
+  border: 1px solid var(--border-light);
 }
 
 .form-card h3 {
   margin: 0 0 20px 0;
   font-size: 20px;
   font-weight: 700;
-  color: #1a202c;
+  color: var(--text-primary);
 }
 
 .form-grid {
@@ -109,11 +113,11 @@
 .form-grid select,
 .form-grid textarea {
   padding: 12px 16px;
-  border: 2px solid #e2e8f0;
+  border: 2px solid var(--border-light);
   border-radius: 10px;
   font-size: 15px;
-  color: #2d3748;
-  background: white;
+  color: var(--text-primary);
+  background: var(--bg-primary);
   transition: border-color 0.2s ease;
 }
 
@@ -121,7 +125,7 @@
 .form-grid select:focus,
 .form-grid textarea:focus {
   outline: none;
-  border-color: #10b981;
+  border-color: var(--color-success);
   box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.1);
 }
 
@@ -136,7 +140,7 @@
   align-items: center;
   gap: 8px;
   font-size: 15px;
-  color: #4a5568;
+  color: var(--text-secondary);
   cursor: pointer;
   grid-column: 1 / -1;
 }
@@ -168,11 +172,12 @@
 
 /* Empty State */
 .empty-state {
-  background: white;
+  background: var(--bg-primary);
   border-radius: 16px;
   padding: 60px 40px;
   text-align: center;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  box-shadow: var(--shadow-lg);
+  border: 1px solid var(--border-light);
 }
 
 .empty-icon {
@@ -185,13 +190,13 @@
   margin: 0 0 12px 0;
   font-size: 24px;
   font-weight: 700;
-  color: #1a202c;
+  color: var(--text-primary);
 }
 
 .empty-state p {
   margin: 0;
   font-size: 16px;
-  color: #718096;
+  color: var(--text-secondary);
 }
 
 /* Productos Grid */
@@ -202,17 +207,17 @@
 }
 
 .producto-card {
-  background: white;
+  background: var(--bg-primary);
   border-radius: 16px;
   padding: 24px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  box-shadow: var(--shadow-lg);
   transition: all 0.3s ease;
-  border: 2px solid transparent;
+  border: 2px solid var(--border-light);
 }
 
 .producto-card:hover {
-  border-color: #10b981;
-  box-shadow: 0 8px 30px rgba(16, 185, 129, 0.15);
+  border-color: var(--color-success);
+  box-shadow: var(--shadow-xl);
   transform: translateY(-4px);
 }
 
@@ -223,14 +228,14 @@
   align-items: flex-start;
   margin-bottom: 16px;
   padding-bottom: 16px;
-  border-bottom: 2px solid #e2e8f0;
+  border-bottom: 2px solid var(--border-light);
 }
 
 .producto-header h3 {
   margin: 0;
   font-size: 18px;
   font-weight: 700;
-  color: #1a202c;
+  color: var(--text-primary);
   flex: 1;
 }
 
@@ -260,7 +265,7 @@
 .producto-body .descripcion {
   margin: 0 0 16px 0;
   font-size: 14px;
-  color: #718096;
+  color: var(--text-secondary);
   line-height: 1.6;
 }
 
@@ -273,20 +278,20 @@
 
 .producto-body .label {
   font-size: 13px;
-  color: #a0aec0;
+  color: var(--text-light);
   font-weight: 600;
 }
 
 .producto-body .value {
   font-size: 15px;
-  color: #2d3748;
+  color: var(--text-secondary);
   font-weight: 500;
 }
 
 .producto-body .value.precio {
   font-size: 20px;
   font-weight: 700;
-  color: #10b981;
+  color: var(--color-success);
 }
 
 .producto-body .value.stock {

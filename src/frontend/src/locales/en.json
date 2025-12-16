@@ -10,6 +10,7 @@
     "phone": "Phone",
     "address": "Address",
     "save": "Save",
+    "saving": "Saving...",
     "cancel": "Cancel",
     "delete": "Delete",
     "edit": "Edit",
@@ -29,7 +30,26 @@
     "quantity": "Quantity",
     "stock": "Stock",
     "available": "Available",
-    "unavailable": "Unavailable"
+    "unavailable": "Unavailable",
+    "view": "View",
+    "details": "Details",
+    "close": "Close",
+    "refresh": "Refresh",
+    "actions": "Actions",
+    "status": "Status",
+    "date": "Date",
+    "description": "Description",
+    "notes": "Notes",
+    "client": "Client",
+    "store": "Store",
+    "product": "Product",
+    "invoice": "Invoice",
+    "share": "Share",
+    "download": "Download",
+    "generate": "Generate",
+    "support": "Support",
+    "emergency": "Emergency",
+    "contact": "Contact"
   },
   "auth": {
     "loginTitle": "Login to PREXCOL",
@@ -44,6 +64,7 @@
     "logoutSuccess": "Logged out successfully"
   },
   "dashboard": {
+    "operationsCenter": "Operations Center",
     "admin": {
       "title": "Admin Dashboard",
       "users": "Users",
@@ -66,6 +87,13 @@
       "catalog": "Catalog",
       "cart": "Cart",
       "checkout": "Checkout"
+    },
+    "logistics": {
+      "title": "Logistics Dashboard",
+      "newOrders": "New Orders",
+      "inPreparation": "Orders in Preparation",
+      "inRoute": "Orders in Route",
+      "deliveryHistory": "Delivery History"
     }
   },
   "products": {
@@ -78,21 +106,40 @@
     "description": "Description",
     "outOfStock": "Out of Stock",
     "lowStock": "Low Stock",
-    "inStock": "In Stock"
+    "inStock": "In Stock",
+    "unitPrice": "Unit Price"
   },
   "orders": {
     "title": "Orders",
+    "order": "Order",
     "createOrder": "Create Order",
     "orderNumber": "Order #{{number}}",
     "orderDate": "Order Date",
     "orderStatus": "Order Status",
     "paymentMethod": "Payment Method",
+    "requestDate": "Request Date",
+    "lastUpdate": "Last Update",
+    "deliveryDate": "Delivery Date",
+    "noOrders": "No orders in this section",
+    "noResults": "No results for your search",
+    "orderDetail": "Order Detail #{{id}}",
     "status": {
       "pending": "Pending",
       "preparing": "Preparing",
       "inTransit": "In Transit",
       "delivered": "Delivered",
       "cancelled": "Cancelled"
+    },
+    "actions": {
+      "startPreparation": "Start Preparation",
+      "startShipping": "Start Shipping",
+      "markDelivered": "Mark Delivered",
+      "viewDetails": "View Details",
+      "viewInvoice": "View Invoice",
+      "generateInvoice": "Generate Invoice",
+      "shareWhatsApp": "WhatsApp",
+      "copyLink": "Copy",
+      "contactSupport": "Contact Emergency Support"
     },
     "paymentMethods": {
       "cash": "Cash",
@@ -102,8 +149,10 @@
     "confirmCreate": "Are you sure you want to create this order?",
     "createSuccess": "Order created successfully",
     "createError": "Error creating order",
-    "updateSuccess": "Order updated successfully",
-    "noOrders": "You don't have any orders yet"
+    "updateSuccess": "✓ Order #{{id}} updated to {{status}}",
+    "invoiceNotAvailable": "Invoice not available",
+    "invoiceGenerating": "Requesting invoice generation...",
+    "invoiceGenerated": "Invoice generated successfully. You can now view it."
   },
   "cart": {
     "title": "Shopping Cart",
@@ -126,6 +175,9 @@
     "status": "Status",
     "active": "Active",
     "inactive": "Inactive",
+    "myAccount": "My Account",
+    "myProfile": "My Profile",
+    "settings": "Settings",
     "roles": {
       "admin": "Administrator",
       "client": "Client",
@@ -140,6 +192,28 @@
     "deleteStore": "Delete Store",
     "selectStore": "Select a store",
     "noStores": "No stores available"
+  },
+  "tabs": {
+    "pending": "Pending",
+    "preparing": "In Preparation",
+    "inTransit": "In Transit",
+    "delivered": "Delivered"
+  },
+  "search": {
+    "placeholder": "🔍 Search ID, Client...",
+    "noResults": "No results found"
+  },
+  "theme": {
+    "light": "Light Mode",
+    "dark": "Dark Mode",
+    "toggle": "Toggle Theme",
+    "switchToLight": "Switch to Light Mode",
+    "switchToDark": "Switch to Dark Mode"
+  },
+  "language": {
+    "spanish": "Español",
+    "english": "English",
+    "select": "Select language"
   },
   "validation": {
     "required": "This field is required",
@@ -157,6 +231,70 @@
     "unauthorized": "You don't have permission to perform this action.",
     "notFound": "Resource not found.",
     "serverError": "Server error. Try again later.",
-    "sessionExpired": "Your session has expired. Please login again."
+    "sessionExpired": "Your session has expired. Please login again.",
+    "loadingOrders": "Error loading orders.",
+    "changingStatus": "Error changing order status"
+  },
+  "messages": {
+    "confirmStatusChange": "Change order #{{id}} to status \"{{status}}\"?",
+    "linkCopied": "🔗 Invoice link copied to clipboard",
+    "emergencyMessage": "Hello Support, I have an emergency with order #{{id}}.",
+    "shareMessage": "Hi, here's your invoice for order #{{id}} from Prex Col: {{url}}"
+  },
+  "documentation": {
+    "title": "Documentation",
+    "api": "API",
+    "docs": "Docs"
+  },
+  "help": {
+    "help": "Help",
+    "helpCenter": "Help Center",
+    "buttonTitle": "Help and Support",
+    "documentation": "Documentation",
+    "userManual": "Complete User Manual",
+    "technicalDocs": "Technical Documentation",
+    "quickAccess": "Quick Access",
+    "dashboard": "Dashboard",
+    "myProfile": "My Profile",
+    "settings": "Settings",
+    "support": "Support",
+    "email": "Email",
+    "phone": "Phone",
+    "schedule": "Schedule",
+    "scheduleHours": "Mon-Fri 8AM-6PM",
+    "keyboardShortcuts": "Keyboard Shortcuts",
+    "shortcutHelp": "Open/Close help",
+    "shortcutManual": "Open complete manual",
+    "shortcutClose": "Close modal",
+    "version": "PREXCOL v2.0 - December 2025"
+  },
+  "settings": {
+    "userInfo": "User Information",
+    "security": "Security",
+    "changePassword": "Change Password",
+    "currentPassword": "Current Password",
+    "currentPasswordRequired": "Current password is required",
+    "newPassword": "New Password",
+    "newPasswordRequired": "New password is required",
+    "confirmPassword": "Confirm Password",
+    "passwordChanged": "Password changed successfully",
+    "notifications": "Notifications",
+    "emailNotifications": "Email notifications",
+    "orderNotifications": "Order notifications",
+    "marketingEmails": "Marketing emails",
+    "preferences": "Preferences",
+    "currency": "Currency",
+    "deactivateAccount": "Deactivate Account",
+    "confirmDeactivate": "Are you sure you want to deactivate your account? A confirmation email will be sent.",
+    "accountDeactivated": "Account deactivated. Check your email to confirm deactivation.",
+    "saved": "Saved - Redirecting...",
+    "savedSuccess": "Settings saved successfully. Redirecting to dashboard..."
+  },
+  "profile": {
+    "fullName": "Full Name",
+    "phonePlaceholder": "E.g: +57 300 1234567",
+    "addressPlaceholder": "Enter your complete address",
+    "changePhoto": "Change photo",
+    "updateSuccess": "Profile updated successfully"
   }
 }

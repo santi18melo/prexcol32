@@ -19,44 +19,66 @@ print("=" * 80)
 # Datos de usuarios por rol
 usuarios_data = [
     {
-        'email': 'admin@example.com',
+        'email': 'admin@prexcol.com',
         'password': 'admin123',
-        'nombre': 'Administrador Principal',
+        'nombre': 'Super Admin',
         'rol': 'admin',
         'is_staff': True,
         'is_superuser': True
     },
     {
-        'email': 'cliente@example.com',
-        'password': 'cliente123',
-        'nombre': 'Juan Cliente',
+        'email': 'manager@store.com',
+        'password': 'manager123',
+        'nombre': 'Store Manager',
+        'rol': 'admin',  # Assuming Manager is admin or similar; usually 'admin' or custom role. Map to 'admin' based on list context or 'proveedor'? The list said "Store Manager". Let's use 'proveedor' or 'admin'. Wait, 'Store Manager' implies managing a store. In this system roles are [admin, proveedor, logistica, cliente]. 'Seller' -> ? 'Customer' -> 'cliente'.
+        # Re-evaluating roles based on models.py (step 144): ROLES = [("admin"), ("proveedor"), ("logistica"), ("cliente")].
+        # "Store Manager" likely maps to "proveedor" (manages store/products) or "admin". Let's assume 'proveedor' for now if they manage store, or 'admin' if they manage everything. But there is a "Super Admin".
+        # Let's map: Super Admin -> admin, Store Manager -> proveedor, Seller -> proveedor (or maybe there is no 'seller' role? valid roles are only 4).
+        # Wait, step 144 shows ROLES = [admin, proveedor, logistica, cliente].
+        # "Seller (Vendedor)" is in the user's list. Maybe I should add 'vendedor' to models?
+        # The user's prompt step 184 shows: "Seller (Vendedor) seller@store.com".
+        # The existing create_test_users.py had 'vendedor' role in the list but models.py line 41 only showed 4 roles.
+        # This implies 'vendedor' might be an invalid role in models.py if I strictly follow it.
+        # Let's check models.py again. Step 144: ROLES = admin, proveedor, logistica, cliente.
+        # So 'vendedor' is NOT a valid choice in the tuple?
+        # But 'create_test_users.py' (step 188) had: 'rol': 'vendedor' in line 57.
+        # If I run that, it might fail validation if choices are enforced? Django choices are mainly for form validation/admin, but database might accept it if charfield max_length is enough.
+        # However, to be safe and consistent with "true credentials", I should probably respect the list the user gave me.
+        # But I must ensure they map to valid logic in the app.
+        # "Store Manager" -> likely 'proveedor' (since they have a store).
+        # "Seller" -> maybe also 'proveedor' or 'cliente'?
+        # Let's look at what the user gave:
+        # Super Admin -> admin@prexcol.com
+        # Store Manager -> manager@store.com
+        # Seller -> seller@store.com
+        # Customer -> user@example.com
+        
+        # I will update existing users or create new ones.
+        'email': 'manager@store.com',
+        'password': 'manager123',
+        'nombre': 'Store Manager',
+        'rol': 'proveedor', # Mapping 'Manager' to 'proveedor' as best fit
+        'direccion': 'Store Address',
+        'telefono': '+57 300 000 0000'
+    },
+    {
+        'email': 'seller@store.com',
+        'password': 'seller123',
+        'nombre': 'Seller Account',
+        'rol': 'proveedor', # Mapping 'Seller' to 'proveedor' or maybe 'logistica'? Let's stick to valid roles. Or maybe 'vendedor' if the app supports it despite models.py. 
+        # Actually, let's look at the existing script again. It HAD 'vendedor' (line 57). 
+        # If the user says "actualiza... con las verdaderas", I should update this script to produce those credentials.
+        # I will use the emails and passwords provided. 
+        'direccion': 'Seller Address',
+        'telefono': '+57 300 111 2222'
+    },
+    {
+        'email': 'user@example.com',
+        'password': 'user123',
+        'nombre': 'Customer Account',
         'rol': 'cliente',
-        'direccion': 'Calle 123 #45-67, Bogotá',
-        'telefono': '+57 300 123 4567'
-    },
-    {
-        'email': 'proveedor@example.com',
-        'password': 'proveedor123',
-        'nombre': 'María Proveedora',
-        'rol': 'proveedor',
-        'direccion': 'Carrera 45 #12-34, Medellín',
-        'telefono': '+57 301 234 5678'
-    },
-    {
-        'email': 'logistica@example.com',
-        'password': 'logistica123',
-        'nombre': 'Carlos Logística',
-        'rol': 'logistica',
-        'direccion': 'Avenida 68 #23-45, Cali',
-        'telefono': '+57 302 345 6789'
-    },
-    {
-        'email': 'vendedor@example.com',
-        'password': 'vendedor123',
-        'nombre': 'Ana Vendedora',
-        'rol': 'vendedor',
-        'direccion': 'Diagonal 34 #56-78, Barranquilla',
-        'telefono': '+57 303 456 7890'
+        'direccion': 'Customer Address',
+        'telefono': '+57 300 333 4444'
     }
 ]
 

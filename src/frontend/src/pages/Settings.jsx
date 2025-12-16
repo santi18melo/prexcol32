@@ -2,16 +2,16 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-
 import { useTheme } from "../context/ThemeContext";
 import { useTranslation } from "../context/I18nContext";
-import { axiosInstance } from "../services/api";
+import UserService from "../services/userService";
+import "../styles/Settings.css";
 
 export default function Settings() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const { theme, setTheme } = useTheme();
-  const { locale, changeLocale } = useTranslation();
+  const { locale, changeLocale, t } = useTranslation();
   
   const [settings, setSettings] = useState({
     emailNotifications: true,
@@ -23,6 +23,14 @@ export default function Settings() {
   });
 
   const [saved, setSaved] = useState(false);
+  const [showPasswordChange, setShowPasswordChange] = useState(false);
+  const [passwordData, setPasswordData] = useState({
+    currentPassword: "",
+    newPassword: "",
+    confirmPassword: ""
+  });
+  const [passwordError, setPasswordError] = useState("");
+  const [passwordSuccess, setPasswordSuccess] = useState("");
 
   useEffect(() => {
     const savedSettings = localStorage.getItem("userSettings");
@@ -31,7 +39,7 @@ export default function Settings() {
     }
   }, []);
 
-  // Update local state when context changes (if changed from elsewhere)
+  // Update local state when context changes
   useEffect(() => {
     setSettings(prev => ({ ...prev, theme: theme, language: locale }));
   }, [theme, locale]);
@@ -45,7 +53,7 @@ export default function Settings() {
       [name]: newValue
     }));
 
-    // Apply changes immediately for detailed feedback
+    // Apply changes immediately
     if (name === 'theme') {
         setTheme(newValue);
     }
@@ -54,31 +62,95 @@ export default function Settings() {
     }
   };
 
+  const handlePasswordChange = (e) => {
+    const { name, value } = e.target;
+    setPasswordData(prev => ({ ...prev, [name]: value }));
+    setPasswordError("");
+  };
+
+  const handleSavePassword = async (e) => {
+    e.preventDefault();
+    setPasswordError("");
+    setPasswordSuccess("");
+
+    // Validations
+    if (!passwordData.currentPassword) {
+      setPasswordError(t('settings.currentPasswordRequired'));
+      return;
+    }
+    if (!passwordData.newPassword) {
+      setPasswordError(t('settings.newPasswordRequired'));
+      return;
+    }
+    
+    // Strict Validation matching backend
+    const password = passwordData.newPassword;
+    if (password.length < 8) {
+        setPasswordError("La contraseña debe tener al menos 8 caracteres.");
+        return;
+    }
+    if (!/[A-Z]/.test(password)) {
+        setPasswordError("La contraseña debe contener al menos una letra mayúscula.");
+        return;
+    }
+    if (!/[a-z]/.test(password)) {
+        setPasswordError("La contraseña debe contener al menos una letra minúscula.");
+        return;
+    }
+    if (!/[0-9]/.test(password)) {
+        setPasswordError("La contraseña debe contener al menos un número.");
+        return;
+    }
+    if (!/[!@#$%^&*(),.?":{}|<>]/.test(password)) {
+        setPasswordError("La contraseña debe contener al menos un carácter especial.");
+        return;
+    }
+
+    if (passwordData.newPassword !== passwordData.confirmPassword) {
+      setPasswordError(t('validation.passwordMatch'));
+      return;
+    }
+
+    try {
+      await UserService.changePassword({
+        old_password: passwordData.currentPassword,
+        new_password: passwordData.newPassword
+      });
+      
+      setPasswordSuccess(t('settings.passwordChanged'));
+      setPasswordData({ currentPassword: "", newPassword: "", confirmPassword: "" });
+      
+      setTimeout(() => {
+        setPasswordSuccess("");
+        setShowPasswordChange(false);
+      }, 3000);
+    } catch (error) {
+      console.error("Error changing password:", error);
+      setPasswordError(error.response?.data?.error || error.response?.data?.detail || t('errors.generic'));
+    }
+  };
+
   const handleSave = async () => {
     try {
       localStorage.setItem("userSettings", JSON.stringify(settings));
-      
-      // Also sync with backend if needed
-      // await axiosInstance.post('/usuarios/preferencias/', settings);
-
       setSaved(true);
       setTimeout(() => navigate("/dashboard"), 1500);
     } catch (error) {
       console.error("Error saving settings:", error);
-      alert("Error al guardar configuración");
+      alert(t('errors.generic'));
     }
   };
 
   const handleDeactivateAccount = async () => {
-    if (window.confirm("¿Seguro que deseas desactivar tu cuenta? Se enviará un correo de confirmación.")) {
+    if (window.confirm(t('settings.confirmDeactivate'))) {
       try {
-        await axiosInstance.post('/usuarios/deactivate/');
-        alert("Cuenta desactivada. Revisa tu correo confirmado la desactivación.");
+        await UserService.deactivateAccount();
+        alert(t('settings.accountDeactivated'));
         logout();
         navigate("/login");
       } catch (error) {
         console.error("Error deactivating:", error);
-        alert("Error al desactivar: " + (error.response?.data?.error || "Error desconocido"));
+        alert(t('errors.generic'));
       }
     }
   };
@@ -89,109 +161,223 @@ export default function Settings() {
   };
 
   return (
-    <div style={styles.container}>
-      <div style={styles.card}>
-        <h1 style={styles.title}>Configuración</h1>
+    <div className="settings-container">
+      <div className="settings-card">
+        <h1 className="settings-title">⚙️ {t('users.settings')}</h1>
         
         {/* User Info */}
-        <section style={styles.section}>
-          <h2 style={styles.sectionTitle}>Información de Usuario</h2>
-          <div style={styles.infoGrid}>
-            <div style={styles.infoItem}>
-              <span style={styles.label}>Nombre:</span>
-              <span style={styles.value}>{user?.nombre || "N/A"}</span>
+        <section className="settings-section">
+          <h2 className="section-title">👤 {t('settings.userInfo')}</h2>
+          <div className="info-grid">
+            <div className="info-item">
+              <span className="info-label">{t('common.name')}:</span>
+              <span className="info-value">{user?.nombre || "N/A"}</span>
             </div>
-            <div style={styles.infoItem}>
-              <span style={styles.label}>Email:</span>
-              <span style={styles.value}>{user?.email || "N/A"}</span>
+            <div className="info-item">
+              <span className="info-label">{t('common.email')}:</span>
+              <span className="info-value">{user?.email || "N/A"}</span>
             </div>
-            <div style={styles.infoItem}>
-              <span style={styles.label}>Rol:</span>
-              <span style={styles.value}>{user?.rol || "N/A"}</span>
+            <div className="info-item">
+              <span className="info-label">{t('users.role')}:</span>
+              <span className="info-value">{user?.rol?.toUpperCase() || "N/A"}</span>
             </div>
           </div>
         </section>
 
+        {/* Password Change */}
+        <section className="settings-section">
+          <h2 className="section-title">🔒 {t('settings.security')}</h2>
+          {!showPasswordChange ? (
+            <button 
+              onClick={() => setShowPasswordChange(true)} 
+              className="btn-secondary"
+            >
+              🔑 {t('settings.changePassword')}
+            </button>
+          ) : (
+            <form onSubmit={handleSavePassword} className="password-form">
+              {passwordError && (
+                <div className="alert alert-error">⚠️ {passwordError}</div>
+              )}
+              {passwordSuccess && (
+                <div className="alert alert-success">✓ {passwordSuccess}</div>
+              )}
+              
+              <div className="form-group">
+                <label>{t('settings.currentPassword') }*</label>
+                <input
+                  type="password"
+                  name="currentPassword"
+                  value={passwordData.currentPassword}
+                  onChange={handlePasswordChange}
+                  className="form-input"
+                  required
+                />
+              </div>
+              
+              <div className="form-group">
+                <label>{t('settings.newPassword')} *</label>
+                <input
+                  type="password"
+                  name="newPassword"
+                  value={passwordData.newPassword}
+                  onChange={handlePasswordChange}
+                  className="form-input"
+                  required
+                />
+                
+                {/* Visual Password Requirements */}
+                <div className="password-requirements">
+                   <p className="requirements-title">Requisitos de contraseña:</p>
+                   <ul className="requirements-list">
+                      <li className={passwordData.newPassword.length >= 8 ? "valid" : "invalid"}>
+                        {passwordData.newPassword.length >= 8 ? "✓" : "○"} Mínimo 8 caracteres
+                      </li>
+                      <li className={/[A-Z]/.test(passwordData.newPassword) ? "valid" : "invalid"}>
+                        {/[A-Z]/.test(passwordData.newPassword) ? "✓" : "○"} Una mayúscula
+                      </li>
+                      <li className={/[a-z]/.test(passwordData.newPassword) ? "valid" : "invalid"}>
+                        {/[a-z]/.test(passwordData.newPassword) ? "✓" : "○"} Una minúscula
+                      </li>
+                      <li className={/[0-9]/.test(passwordData.newPassword) ? "valid" : "invalid"}>
+                        {/[0-9]/.test(passwordData.newPassword) ? "✓" : "○"} Un número
+                      </li>
+                      <li className={/[!@#$%^&*(),.?":{}|<>]/.test(passwordData.newPassword) ? "valid" : "invalid"}>
+                        {/[!@#$%^&*(),.?":{}|<>]/.test(passwordData.newPassword) ? "✓" : "○"} Un carácter especial
+                      </li>
+                   </ul>
+                </div>
+              </div>
+              
+              <div className="form-group">
+                <label>{t('settings.confirmPassword')} *</label>
+                <input
+                  type="password"
+                  name="confirmPassword"
+                  value={passwordData.confirmPassword}
+                  onChange={handlePasswordChange}
+                  className="form-input"
+                  required
+                />
+                 {passwordData.confirmPassword && passwordData.newPassword !== passwordData.confirmPassword && (
+                    <small className="error-text">Las contraseñas no coinciden</small>
+                 )}
+              </div>
+              
+              <div className="form-actions">
+                <button 
+                  type="button" 
+                  onClick={() => {
+                    setShowPasswordChange(false);
+                    setPasswordData({ currentPassword: "", newPassword: "", confirmPassword: "" });
+                    setPasswordError("");
+                  }} 
+                  className="btn-cancel"
+                >
+                  {t('common.cancel')}
+                </button>
+                <button 
+                  type="submit" 
+                  className="btn-save"
+                  disabled={
+                    !passwordData.currentPassword ||
+                    !passwordData.newPassword ||
+                    passwordData.newPassword !== passwordData.confirmPassword ||
+                    passwordData.newPassword.length < 8 ||
+                    !/[A-Z]/.test(passwordData.newPassword) ||
+                    !/[a-z]/.test(passwordData.newPassword) ||
+                    !/[0-9]/.test(passwordData.newPassword) ||
+                    !/[!@#$%^&*(),.?":{}|<>]/.test(passwordData.newPassword)
+                  }
+                >
+                  💾 {t('common.save')}
+                </button>
+              </div>
+            </form>
+
+          )}
+        </section>
+
         {/* Notifications */}
-        <section style={styles.section}>
-          <h2 style={styles.sectionTitle}>Notificaciones</h2>
-          <div style={styles.settingItem}>
-            <label style={styles.checkboxLabel}>
+        <section className="settings-section">
+          <h2 className="section-title">🔔 {t('settings.notifications')}</h2>
+          <div className="setting-item">
+            <label className="checkbox-label">
               <input
                 type="checkbox"
                 name="emailNotifications"
                 checked={settings.emailNotifications}
                 onChange={handleChange}
-                style={styles.checkbox}
+                className="checkbox-input"
               />
-              Notificaciones por email
+              {t('settings.emailNotifications')}
             </label>
           </div>
-          <div style={styles.settingItem}>
-            <label style={styles.checkboxLabel}>
+          <div className="setting-item">
+            <label className="checkbox-label">
               <input
                 type="checkbox"
                 name="orderNotifications"
                 checked={settings.orderNotifications}
                 onChange={handleChange}
-                style={styles.checkbox}
+                className="checkbox-input"
               />
-              Notificaciones de pedidos
+              {t('settings.orderNotifications')}
             </label>
           </div>
-          <div style={styles.settingItem}>
-            <label style={styles.checkboxLabel}>
+          <div className="setting-item">
+            <label className="checkbox-label">
               <input
                 type="checkbox"
                 name="marketingEmails"
                 checked={settings.marketingEmails}
                 onChange={handleChange}
-                style={styles.checkbox}
+                className="checkbox-input"
               />
-              Emails de marketing
+              {t('settings.marketingEmails')}
             </label>
           </div>
         </section>
 
         {/* Preferences */}
-        <section style={styles.section}>
-          <h2 style={styles.sectionTitle}>Preferencias</h2>
-          <div style={styles.settingItem}>
-            <label style={styles.selectLabel}>
-              Idioma:
+        <section className="settings-section">
+          <h2 className="section-title">🎨 {t('settings.preferences')}</h2>
+          <div className="setting-item">
+            <label className="select-label">
+              {t('language.select')}:
               <select
                 name="language"
                 value={settings.language}
                 onChange={handleChange}
-                style={styles.select}
+                className="select-input"
               >
-                <option value="es">Español</option>
-                <option value="en">English</option>
+                <option value="es">{t('language.spanish')}</option>
+                <option value="en">{t('language.english')}</option>
               </select>
             </label>
           </div>
-          <div style={styles.settingItem}>
-            <label style={styles.selectLabel}>
-              Tema:
+          <div className="setting-item">
+            <label className="select-label">
+              {t('theme.toggle')}:
               <select
                 name="theme"
                 value={settings.theme}
                 onChange={handleChange}
-                style={styles.select}
+                className="select-input"
               >
-                <option value="light">Claro</option>
-                <option value="dark">Oscuro</option>
+                <option value="light">{t('theme.light')}</option>
+                <option value="dark">{t('theme.dark')}</option>
               </select>
             </label>
           </div>
-          <div style={styles.settingItem}>
-            <label style={styles.selectLabel}>
-              Moneda:
+          <div className="setting-item">
+            <label className="select-label">
+              {t('settings.currency')}:
               <select
                 name="currency"
                 value={settings.currency}
                 onChange={handleChange}
-                style={styles.select}
+                className="select-input"
               >
                 <option value="COP">COP (Pesos Colombianos)</option>
                 <option value="USD">USD (Dólares)</option>
@@ -202,148 +388,27 @@ export default function Settings() {
         </section>
 
         {/* Actions */}
-        <section style={styles.section}>
-          <h2 style={styles.sectionTitle}>Acciones</h2>
-          <div style={styles.buttonGroup}>
-            <button onClick={handleSave} style={styles.saveButton}>
-              {saved ? "✓ Guardado - Redirigiendo..." : "Guardar Cambios"}
+        <section className="settings-section">
+          <h2 className="section-title">🔧 {t('common.actions')}</h2>
+          <div className="button-group">
+            <button onClick={handleSave} className="btn-save">
+              {saved ? `✓ ${t('settings.saved')}` : `💾 ${t('common.save')}`}
             </button>
-            <button onClick={handleLogout} style={styles.logoutButton}>
-              Cerrar Sesión
+            <button onClick={handleLogout} className="btn-logout">
+              🚪 {t('common.logout')}
             </button>
-            <button onClick={handleDeactivateAccount} style={styles.deleteButton}>
-              Desactivar Cuenta
+            <button onClick={handleDeactivateAccount} className="btn-danger">
+              ⚠️ {t('settings.deactivateAccount')}
             </button>
           </div>
         </section>
 
         {saved && (
-          <div style={styles.successMessage}>
-            ✓ Configuración guardada correctamente. Redirigiendo al dashboard...
+          <div className="alert alert-success">
+            ✓ {t('settings.savedSuccess')}
           </div>
         )}
       </div>
     </div>
   );
 }
-
-const styles = {
-  container: {
-    padding: "20px",
-    maxWidth: "900px",
-    margin: "0 auto",
-  },
-  card: {
-    background: "#fff",
-    borderRadius: "12px",
-    boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
-    padding: "30px",
-  },
-  title: {
-    fontSize: "32px",
-    marginBottom: "30px",
-    color: "#333",
-  },
-  section: {
-    marginBottom: "30px",
-    paddingBottom: "20px",
-    borderBottom: "1px solid #e0e0e0",
-  },
-  sectionTitle: {
-    fontSize: "20px",
-    marginBottom: "15px",
-    color: "#555",
-  },
-  infoGrid: {
-    display: "grid",
-    gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))",
-    gap: "15px",
-  },
-  infoItem: {
-    display: "flex",
-    flexDirection: "column",
-    gap: "5px",
-  },
-  label: {
-    fontSize: "14px",
-    color: "#888",
-    fontWeight: "500",
-  },
-  value: {
-    fontSize: "16px",
-    color: "#333",
-  },
-  settingItem: {
-    marginBottom: "15px",
-  },
-  checkboxLabel: {
-    display: "flex",
-    alignItems: "center",
-    gap: "10px",
-    fontSize: "16px",
-    color: "#333",
-    cursor: "pointer",
-  },
-  checkbox: {
-    width: "20px",
-    height: "20px",
-    cursor: "pointer",
-  },
-  selectLabel: {
-    display: "flex",
-    flexDirection: "column",
-    gap: "8px",
-    fontSize: "16px",
-    color: "#333",
-  },
-  select: {
-    padding: "10px",
-    fontSize: "16px",
-    border: "1px solid #ddd",
-    borderRadius: "6px",
-    backgroundColor: "#fff",
-  },
-  buttonGroup: {
-    display: "flex",
-    gap: "15px",
-    flexWrap: "wrap",
-  },
-  saveButton: {
-    padding: "12px 24px",
-    background: "linear-gradient(135deg, #28a745, #20c997)",
-    color: "white",
-    border: "none",
-    borderRadius: "8px",
-    cursor: "pointer",
-    fontSize: "16px",
-    fontWeight: "600",
-  },
-  logoutButton: {
-    padding: "12px 24px",
-    background: "#6c757d",
-    color: "white",
-    border: "none",
-    borderRadius: "8px",
-    cursor: "pointer",
-    fontSize: "16px",
-  },
-  deleteButton: {
-    padding: "12px 24px",
-    background: "#ffc107",
-    color: "#333",
-    border: "none",
-    borderRadius: "8px",
-    cursor: "pointer",
-    fontSize: "16px",
-    fontWeight: "600",
-  },
-  successMessage: {
-    marginTop: "20px",
-    padding: "15px",
-    background: "#d4edda",
-    color: "#155724",
-    borderRadius: "6px",
-    textAlign: "center",
-    fontWeight: "600",
-  },
-};

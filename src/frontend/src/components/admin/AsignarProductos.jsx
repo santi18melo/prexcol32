@@ -42,12 +42,14 @@ function AsignarProductos() {
       
       const productosArray = Array.isArray(productosData) ? productosData : (productosData.results || []);
       setProductos(productosArray);
-      setProveedores(Array.isArray(proveedoresData) ? proveedoresData : []);
+
+      const proveedoresArray = Array.isArray(proveedoresData) ? proveedoresData : (proveedoresData.results || []);
+      setProveedores(proveedoresArray);
       
       if (productosArray.length === 0) {
         setError('No se encontraron productos. Asegúrate de crear productos primero.');
       }
-      if (!Array.isArray(proveedoresData) || proveedoresData.length === 0) {
+      if (proveedoresArray.length === 0) {
         setError('No se encontraron proveedores. Asegúrate de crear usuarios con rol "proveedor" primero.');
       }
     } catch (err) {

@@ -29,7 +29,7 @@ export default function ModalEdicion({
       
       setFormData(initialData);
     }
-  }, [datos, tipo, secciones]);
+  }, [datos, tipo]);
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;

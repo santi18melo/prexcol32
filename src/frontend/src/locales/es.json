@@ -10,6 +10,7 @@
     "phone": "Teléfono",
     "address": "Dirección",
     "save": "Guardar",
+    "saving": "Guardando...",
     "cancel": "Cancelar",
     "delete": "Eliminar",
     "edit": "Editar",
@@ -29,7 +30,26 @@
     "quantity": "Cantidad",
     "stock": "Stock",
     "available": "Disponible",
-    "unavailable": "No disponible"
+    "unavailable": "No disponible",
+    "view": "Ver",
+    "details": "Detalles",
+    "close": "Cerrar",
+    "refresh": "Actualizar",
+    "actions": "Acciones",
+    "status": "Estado",
+    "date": "Fecha",
+    "description": "Descripción",
+    "notes": "Notas",
+    "client": "Cliente",
+    "store": "Tienda",
+    "product": "Producto",
+    "invoice": "Factura",
+    "share": "Compartir",
+    "download": "Descargar",
+    "generate": "Generar",
+    "support": "Soporte",
+    "emergency": "Emergencia",
+    "contact": "Contactar"
   },
   "auth": {
     "loginTitle": "Iniciar Sesión en PREXCOL",
@@ -44,6 +64,7 @@
     "logoutSuccess": "Sesión cerrada correctamente"
   },
   "dashboard": {
+    "operationsCenter": "Centro de Operaciones",
     "admin": {
       "title": "Panel de Administración",
       "users": "Usuarios",
@@ -66,6 +87,13 @@
       "catalog": "Catálogo",
       "cart": "Carrito",
       "checkout": "Finalizar Compra"
+    },
+    "logistics": {
+      "title": "Panel de Logística",
+      "newOrders": "Pedidos Nuevos",
+      "inPreparation": "Pedidos en Preparación",
+      "inRoute": "Pedidos en Ruta",
+      "deliveryHistory": "Historial de Entregas"
     }
   },
   "products": {
@@ -78,21 +106,40 @@
     "description": "Descripción",
     "outOfStock": "Agotado",
     "lowStock": "Stock Bajo",
-    "inStock": "En Stock"
+    "inStock": "En Stock",
+    "unitPrice": "Precio Unitario"
   },
   "orders": {
     "title": "Pedidos",
+    "order": "Pedido",
     "createOrder": "Crear Pedido",
     "orderNumber": "Pedido #{{number}}",
     "orderDate": "Fecha del Pedido",
     "orderStatus": "Estado del Pedido",
     "paymentMethod": "Método de Pago",
+    "requestDate": "Fecha de Solicitud",
+    "lastUpdate": "Última Actualización",
+    "deliveryDate": "Fecha de Entrega",
+    "noOrders": "No hay pedidos en esta sección",
+    "noResults": "No hay resultados para tu búsqueda",
+    "orderDetail": "Detalle Pedido #{{id}}",
     "status": {
       "pending": "Pendiente",
       "preparing": "Preparando",
       "inTransit": "En Tránsito",
       "delivered": "Entregado",
       "cancelled": "Cancelado"
+    },
+    "actions": {
+      "startPreparation": "Iniciar Preparación",
+      "startShipping": "Iniciar Envío",
+      "markDelivered": "Marcar Entregado",
+      "viewDetails": "Ver Detalle",
+      "viewInvoice": "Ver Factura",
+      "generateInvoice": "Generar Factura",
+      "shareWhatsApp": "WhatsApp",
+      "copyLink": "Copiar",
+      "contactSupport": "Contactar Soporte de Emergencia"
     },
     "paymentMethods": {
       "cash": "Efectivo",
@@ -102,8 +149,10 @@
     "confirmCreate": "¿Estás seguro de crear este pedido?",
     "createSuccess": "Pedido creado exitosamente",
     "createError": "Error al crear el pedido",
-    "updateSuccess": "Pedido actualizado correctamente",
-    "noOrders": "No tienes pedidos aún"
+    "updateSuccess": "✓ Pedido #{{id}} actualizado a {{status}}",
+    "invoiceNotAvailable": "Factura no disponible",
+    "invoiceGenerating": "Solicitando generación de factura...",
+    "invoiceGenerated": "Factura generada exitosamente. Ahora puede visualizarla."
   },
   "cart": {
     "title": "Carrito de Compras",
@@ -126,6 +175,9 @@
     "status": "Estado",
     "active": "Activo",
     "inactive": "Inactivo",
+    "myAccount": "Mi Cuenta",
+    "myProfile": "Mi Perfil",
+    "settings": "Configuración",
     "roles": {
       "admin": "Administrador",
       "client": "Cliente",
@@ -140,6 +192,28 @@
     "deleteStore": "Eliminar Tienda",
     "selectStore": "Seleccionar una tienda",
     "noStores": "No hay tiendas disponibles"
+  },
+  "tabs": {
+    "pending": "Pendientes",
+    "preparing": "En Preparación",
+    "inTransit": "En Tránsito",
+    "delivered": "Entregados"
+  },
+  "search": {
+    "placeholder": "🔍 Buscar ID, Cliente...",
+    "noResults": "No se encontraron resultados"
+  },
+  "theme": {
+    "light": "Modo Claro",
+    "dark": "Modo Oscuro",
+    "toggle": "Cambiar Tema",
+    "switchToLight": "Cambiar a Modo Claro",
+    "switchToDark": "Cambiar a Modo Oscuro"
+  },
+  "language": {
+    "spanish": "Español",
+    "english": "English",
+    "select": "Seleccionar idioma"
   },
   "validation": {
     "required": "Este campo es requerido",
@@ -157,6 +231,70 @@
     "unauthorized": "No tienes permisos para realizar esta acción.",
     "notFound": "Recurso no encontrado.",
     "serverError": "Error del servidor. Intenta más tarde.",
-    "sessionExpired": "Tu sesión ha expirado. Por favor, inicia sesión nuevamente."
+    "sessionExpired": "Tu sesión ha expirado. Por favor, inicia sesión nuevamente.",
+    "loadingOrders": "Error al cargar pedidos.",
+    "changingStatus": "Error al cambiar estado del pedido"
+  },
+  "messages": {
+    "confirmStatusChange": "¿Cambiar pedido #{{id}} a estado \"{{status}}\"?",
+    "linkCopied": "🔗 Enlace de factura copiado al portapapeles",
+    "emergencyMessage": "Hola Soporte, tengo una emergencia con el pedido #{{id}}.",
+    "shareMessage": "Hola, te comparto la factura del pedido #{{id}} de Prex Col: {{url}}"
+  },
+  "documentation": {
+    "title": "Documentación",
+    "api": "API",
+    "docs": "Docs"
+  },
+  "help": {
+    "help": "Ayuda",
+    "helpCenter": "Centro de Ayuda",
+    "buttonTitle": "Ayuda y Soporte",
+    "documentation": "Documentación",
+    "userManual": "Manual de Usuario Completo",
+    "technicalDocs": "Documentación Técnica",
+    "quickAccess": "Accesos Rápidos",
+    "dashboard": "Dashboard",
+    "myProfile": "Mi Perfil",
+    "settings": "Configuración",
+    "support": "Soporte",
+    "email": "Email",
+    "phone": "Teléfono",
+    "schedule": "Horario",
+    "scheduleHours": "Lun-Vie 8AM-6PM",
+    "keyboardShortcuts": "Atajos de Teclado",
+    "shortcutHelp": "Abrir/Cerrar ayuda",
+    "shortcutManual": "Abrir manual completo",
+    "shortcutClose": "Cerrar modal",
+    "version": "PREXCOL v2.0 - Diciembre 2025"
+  },
+  "settings": {
+    "userInfo": "Información de Usuario",
+    "security": "Seguridad",
+    "changePassword": "Cambiar Contraseña",
+    "currentPassword": "Contraseña Actual",
+    "currentPasswordRequired": "La contraseña actual es requerida",
+    "newPassword": "Nueva Contraseña",
+    "newPasswordRequired": "La nueva contraseña es requerida",
+    "confirmPassword": "Confirmar Contraseña",
+    "passwordChanged": "Contraseña cambiada correctamente",
+    "notifications": "Notificaciones",
+    "emailNotifications": "Notificaciones por email",
+    "orderNotifications": "Notificaciones de pedidos",
+    "marketingEmails": "Emails de marketing",
+    "preferences": "Preferencias",
+    "currency": "Moneda",
+    "deactivateAccount": "Desactivar Cuenta",
+    "confirmDeactivate": "¿Seguro que deseas desactivar tu cuenta? Se enviará un correo de confirmación.",
+    "accountDeactivated": "Cuenta desactivada. Revisa tu correo para confirmar la desactivación.",
+    "saved": "Guardado - Redirigiendo...",
+    "savedSuccess": "Configuración guardada correctamente. Redirigiendo al dashboard..."
+  },
+  "profile": {
+    "fullName": "Nombre Completo",
+    "phonePlaceholder": "Ej: +57 300 1234567",
+    "addressPlaceholder": "Ingrese su dirección completa",
+    "changePhoto": "Cambiar foto",
+    "updateSuccess": "Perfil actualizado correctamente"
   }
 }

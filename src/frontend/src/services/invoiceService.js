@@ -1,50 +1,33 @@
+// src/services/invoiceService.js
 import { axiosInstance } from "./api";
 
-/**
- * Service for managing Invoices (Facturas).
- * Endpoints:
- * - GET /facturas/ : List
- * - GET /facturas/<id>/ : Detail
- */
-
 const InvoiceService = {
-  async getAll() {
+  /**
+   * Obtener factura por ID de pedido
+   */
+  async getByOrderId(pedidoId) {
     try {
-      const response = await axiosInstance.get("/facturas/");
-      if (response.data && response.data.results) {
-        return response.data.results;
-      }
+      const response = await axiosInstance.get(`/productos/pedidos/${pedidoId}/ver_factura/`);
       return response.data;
     } catch (error) {
-      console.error("Error fetching invoices:", error);
+      // Ignorar 404 (no existe factura)
+      if (error.response && error.response.status === 404) return null;
+      console.error("Error fetching invoice:", error);
       throw error;
     }
   },
 
-  async getById(id) {
+  /**
+   * Crear nueva factura para un pedido
+   */
+  async createInvoice(pedidoId) {
     try {
-      const response = await axiosInstance.get(`/facturas/${id}/`);
+      // Usamos una acción directa sobre el pedido para generar su factura
+      const response = await axiosInstance.post(`/productos/pedidos/${pedidoId}/generar_factura/`);
       return response.data;
     } catch (error) {
-      console.error(`Error fetching invoice ${id}:`, error);
-      throw error;
-    }
-  },
-
-  // Maybe filter by order ID if supported by backend
-  async getByOrderId(orderId) {
-    try {
-        // This assumes the backend supports filtering by pedido, e.g. /facturas/?pedido=ID
-        const response = await axiosInstance.get(`/facturas/?pedido=${orderId}`);
-        if(response.data && response.data.results && response.data.results.length > 0) {
-            return response.data.results[0];
-        } else if (Array.isArray(response.data) && response.data.length > 0) {
-            return response.data[0];
-        }
-        return null; // Not found
-    } catch (error) {
-        console.error(`Error fetching invoice for order ${orderId}:`, error);
-        return null;
+       console.error("Error creating invoice:", error);
+       throw error;
     }
   }
 };

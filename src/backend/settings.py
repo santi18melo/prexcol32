@@ -166,15 +166,44 @@ AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.MinimumLengthValidator"},
     {"NAME": "django.contrib.auth.password_validation.CommonPasswordValidator"},
     {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"},
+    {"NAME": "backend.validators.CustomPasswordValidator"},
 ]
 
 LANGUAGE_CODE = "es-co"
 TIME_ZONE = "America/Bogota"
+
+# Default currency configuration
+DEFAULT_CURRENCY = "USD"
+# Indicative exchange rates (1 USD = X of other currency)
+CURRENCY_RATES = {
+    "USD": 1.0,
+    "COP": 4000.0,  # Approximate Colombian Peso rate
+    "EUR": 0.85,
+    "GBP": 0.75,
+}
+
+def get_exchange_rate(to_currency: str) -> float:
+    """Return exchange rate from DEFAULT_CURRENCY to the target currency.
+    This is a placeholder using static rates; replace with real API call as needed.
+    """
+    return CURRENCY_RATES.get(to_currency.upper(), 1.0)
+
 USE_I18N = True
-USE_TZ = True
+PRICE_CURRENCY = "USD"
+
+def convert_price(amount: float, to_currency: str) -> float:
+    """Convert amount from DEFAULT_CURRENCY to target currency using static rates.
+    In a real system, replace with live exchange rate API.
+    """
+    rate = get_exchange_rate(to_currency)
+    return amount * rate
+
 
 STATIC_URL = "/static/"
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+
+# Currency used for price fields throughout the application
+PRICE_FIELD_CURRENCY = DEFAULT_CURRENCY
 
 # WhiteNoise Configuration (only in production)
 if not DEBUG:

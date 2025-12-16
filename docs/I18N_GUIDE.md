@@ -1,108 +1,129 @@
-# 🌍 Guía de Internacionalización (i18n)
+# Sistema de Internacionalización (i18n) - PREXCOL
 
-## Descripción General
+## 📋 Descripción
 
-PREXCOL incluye soporte completo para múltiples idiomas mediante un sistema de internacionalización personalizado. Actualmente soporta **Español (ES)** e **Inglés (EN)** con detección automática del idioma del navegador.
+El sistema de internacionalización de PREXCOL permite cambiar el idioma de la aplicación entre **Español** e **Inglés** de forma dinámica.
 
-## 📁 Estructura de Archivos
+## 🏗️ Arquitectura
 
-```
-frontend/src/
-├── locales/
-│   ├── es.json          # Traducciones en español
-│   └── en.json          # Traducciones en inglés
-├── context/
-│   └── I18nContext.jsx  # Contexto y lógica de i18n
-└── components/
-    └── LanguageSelector.jsx  # Selector de idioma
-```
+### **Componentes Principales**:
+
+1. **I18nContext.jsx** - Contexto global de traducción
+2. **LanguageSelector.jsx** - Selector visual de idioma
+3. **Archivos de traducción**:
+   - `locales/es.json` - Traducciones al español
+   - `locales/en.json` - Traducciones al inglés
 
 ## 🚀 Uso Básico
 
-### 1. Envolver la Aplicación con el Provider
-
-En `main.jsx` o `App.jsx`:
-
-```jsx
-import { I18nProvider } from './context/I18nContext';
-
-function App() {
-  return (
-    <I18nProvider>
-      {/* Tu aplicación */}
-    </I18nProvider>
-  );
-}
+### **1. Importar el hook**
+```javascript
+import { useTranslation } from '../context/I18nContext';
 ```
 
-### 2. Usar Traducciones en Componentes
-
-```jsx
-import { useTranslation } from '../context/I18nContext';
-
+### **2. Usar en componentes**
+```javascript
 function MyComponent() {
-  const { t } = useTranslation();
-
+  const { t, locale, changeLocale } = useTranslation();
+  
   return (
     <div>
       <h1>{t('common.welcome')}</h1>
-      <button>{t('common.save')}</button>
+      <button onClick={() => changeLocale('en')}>
+        {t('common.language')}
+      </button>
     </div>
   );
 }
 ```
 
-### 3. Traducciones con Parámetros
+### **3. Traducciones con parámetros**
+```javascript
+// En el JSON:
+// "orderNumber": "Pedido #{{number}}"
 
-```jsx
-const { t } = useTranslation();
-
-// En es.json: "orderNumber": "Pedido #{{number}}"
+// En el componente:
 <p>{t('orders.orderNumber', { number: 123 })}</p>
-// Resultado: "Pedido #123"
-
-// En es.json: "itemCount": "{{count}} artículo"
-<p>{t('cart.itemCount', { count: 5 })}</p>
-// Resultado: "5 artículos"
+// Resultado: "Pedido #123" (ES) o "Order #123" (EN)
 ```
 
-### 4. Cambiar Idioma Programáticamente
+## 📚 Ejemplos de Integración
 
-```jsx
-const { changeLocale } = useTranslation();
+### **Dashboard**
+```javascript
+import { useTranslation } from '../context/I18nContext';
 
-<button onClick={() => changeLocale('en')}>
-  Switch to English
-</button>
-```
-
-### 5. Usar el Selector de Idioma
-
-```jsx
-import LanguageSelector from '../components/LanguageSelector';
-
-function Header() {
+function Dashboard() {
+  const { t } = useTranslation();
+  
   return (
-    <header>
-      <h1>PREXCOL</h1>
-      <LanguageSelector />
-    </header>
+    <div>
+      <h1>{t('dashboard.admin.title')}</h1>
+      <div className="stats">
+        <div>{t('dashboard.admin.stats.totalUsers')}: 150</div>
+        <div>{t('dashboard.admin.stats.totalOrders')}: 75</div>
+      </div>
+    </div>
   );
 }
 ```
 
-## 📝 Estructura de Archivos de Traducción
+### **Login**
+```javascript
+import { useTranslation } from '../context/I18nContext';
 
-Los archivos JSON están organizados por categorías:
+function Login() {
+  const { t } = useTranslation();
+  
+  return (
+    <form>
+      <h2>{t('auth.loginTitle')}</h2>
+      <input placeholder={t('common.email')} />
+      <input placeholder={t('common.password')} type="password" />
+      <button>{t('common.login')}</button>
+    </form>
+  );
+}
+```
+
+### **Producto Card**
+```javascript
+function ProductCard({ product }) {
+  const { t } = useTranslation();
+  
+  return (
+    <div className="product-card">
+      <h3>{product.nombre}</h3>
+      <p>{t('common.price')}: ${product.precio}</p>
+      <p>{t('common.stock')}: {product.stock}</p>
+      <button>{t('products.addToCart')}</button>
+    </div>
+  );
+}
+```
+
+## 🎨 Selector de Idioma
+
+El componente `LanguageSelector` ya está creado y se puede usar en cualquier parte:
+
+```javascript
+import LanguageSelector from './components/LanguageSelector';
+
+// En cualquier componente:
+<LanguageSelector />
+```
+
+**Ya está integrado en**:
+- ✅ DashboardHeader (línea 86)
+- ✅ Settings page
+
+## 📝 Estructura de Archivos de Traducción
 
 ```json
 {
   "common": {
     "welcome": "Bienvenido",
     "login": "Iniciar Sesión"
-  },
-  "auth": {
-    "loginTitle": "Iniciar Sesión en PREXCOL"
   },
   "dashboard": {
     "admin": {
@@ -112,134 +133,87 @@ Los archivos JSON están organizados por categorías:
 }
 ```
 
-### Acceso a Traducciones Anidadas
+## 🔧 Agregar Nuevas Traducciones
 
-```jsx
-t('dashboard.admin.title')  // "Panel de Administración"
-t('auth.loginTitle')        // "Iniciar Sesión en PREXCOL"
-```
-
-## 🎯 Mejores Prácticas
-
-### 1. Organización de Claves
-
-- Usa nombres descriptivos y jerárquicos
-- Agrupa por funcionalidad o página
-- Mantén consistencia entre idiomas
-
-```json
-// ✅ Bueno
-"orders.status.pending": "Pendiente"
-"orders.status.delivered": "Entregado"
-
-// ❌ Evitar
-"pending": "Pendiente"
-"delivered": "Entregado"
-```
-
-### 2. Manejo de Plurales
-
+### **Paso 1**: Agregar en `es.json`
 ```json
 {
-  "cart.itemCount": "{{count}} artículo",
-  "cart.itemCount_plural": "{{count}} artículos"
-}
-```
-
-```jsx
-// El hook detectará automáticamente si usar singular o plural
-t('cart.itemCount', { count: 1 })  // "1 artículo"
-t('cart.itemCount', { count: 5 })  // "5 artículos"
-```
-
-### 3. Valores por Defecto
-
-Si una traducción no existe, el sistema mostrará la clave:
-
-```jsx
-t('nonexistent.key')  // Mostrará: "nonexistent.key"
-// Y un warning en consola
-```
-
-### 4. Validación de Traducciones
-
-Antes de agregar nuevas claves, verifica que existan en TODOS los idiomas:
-
-```bash
-# Ejecutar script de validación (crear si no existe)
-npm run validate-translations
-```
-
-## 🔧 Agregar un Nuevo Idioma
-
-### Paso 1: Crear Archivo de Traducción
-
-Crea `frontend/src/locales/fr.json` (ejemplo: francés):
-
-```json
-{
-  "common": {
-    "welcome": "Bienvenue",
-    "login": "Se connecter"
+  "mySection": {
+    "title": "Mi Título",
+    "description": "Mi descripción con {{param}}"
   }
 }
 ```
 
-### Paso 2: Registrar en el Contexto
-
-En `I18nContext.jsx`:
-
-```jsx
-import es from '../locales/es.json';
-import en from '../locales/en.json';
-import fr from '../locales/fr.json';  // Nuevo
-
-const translations = { es, en, fr };  // Agregar
+### **Paso 2**: Agregar en `en.json`
+```json
+{
+  "mySection": {
+    "title": "My Title",
+    "description": "My description with {{param}}"
+  }
+}
 ```
 
-### Paso 3: Actualizar Selector de Idioma
-
-En `LanguageSelector.jsx`:
-
-```jsx
-const languages = {
-  es: { name: 'Español', flag: '🇪🇸' },
-  en: { name: 'English', flag: '🇺🇸' },
-  fr: { name: 'Français', flag: '🇫🇷' }  // Nuevo
-};
+### **Paso 3**: Usar en componentes
+```javascript
+const { t } = useTranslation();
+<h1>{t('mySection.title')}</h1>
+<p>{t('mySection.description', { param: 'value' })}</p>
 ```
 
-## 🧪 Testing con i18n
+## 🌍 Detección Automática
 
-```jsx
-import { render } from '@testing-library/react';
-import { I18nProvider } from '../context/I18nContext';
+El sistema detecta automáticamente:
+1. **Preferencia guardada** en localStorage
+2. **Idioma del navegador** si no hay preferencia guardada
+3. **Español por defecto** si no se detecta idioma compatible
 
-test('renders translated text', () => {
-  const { getByText } = render(
-    <I18nProvider>
-      <MyComponent />
-    </I18nProvider>
-  );
-  
-  expect(getByText('Bienvenido')).toBeInTheDocument();
-});
-```
+## 💾 Persistencia
 
-## 📊 Estadísticas Actuales
+- Las preferencias se guardan en `localStorage` como `prexcol_locale`
+- Se mantienen entre sesiones
+- Se sincroniza con `document.documentElement.lang` para accesibilidad
 
-- **Idiomas Soportados**: 2 (ES, EN)
-- **Claves de Traducción**: ~150
-- **Categorías**: 10 (common, auth, dashboard, products, orders, cart, users, stores, validation, errors)
+## ⚠️ Buenas Prácticas
 
-## 🚀 Próximos Pasos
+1. **Nunca hardcodear texto** - Siempre usar `t()`
+2. **Claves descriptivas** - Usar rutas con puntos: `section.subsection.key`
+3. **Mantener sincronizados** - Ambos archivos deben tener las mismas claves
+4. **Parámetros dinámicos** - Usar `{{param}}` para valores variables
+5. **Fallback** - Si falta una traducción, se muestra la clave
 
-1. **Agregar más idiomas**: Francés, Portugués
-2. **Pluralización avanzada**: Usar librería como `i18next`
-3. **Traducciones dinámicas**: Cargar desde API
-4. **Detección de idioma por región**: ES-CO, ES-MX, etc.
-5. **Formato de fechas y números**: Según locale
+## 🐛 Debugging
 
-## 📞 Soporte
+Si una traducción no aparece:
+1. Verificar que la clave existe en ambos JSON
+2. Revisar la consola - muestra warnings de traducciones faltantes
+3. Verificar que el componente está dentro del `I18nProvider`
 
-Para agregar nuevas traducciones o reportar errores en las existentes, contacta al equipo de desarrollo.
+## 🎯 Estado Actual
+
+### **Archivos Traducidos**:
+- ✅ `common` - Términos comunes
+- ✅ `auth` - Autenticación
+- ✅ `dashboard` - Dashboards
+- ✅ `products` - Productos
+- ✅ `orders` - Pedidos
+- ✅ `cart` - Carrito
+- ✅ `users` - Usuarios
+- ✅ `stores` - Tiendas
+- ✅ `validation` - Validaciones
+- ✅ `errors` - Mensajes de error
+
+### **Componentes que usan i18n**:
+- ✅ `LanguageSelector.jsx`
+- ✅ `Settings.jsx`
+- 🔄 **Pendiente**: Dashboards, Forms, Modals
+
+## 🚦 Próximos Pasos
+
+Para implementar las traducciones en toda la aplicación:
+
+1. Importar `useTranslation` en cada componente
+2. Reemplazar textos hardcodeados con `t('key')`
+3. Agregar traducciones faltantes a los JSON
+4. Probar cambio de idioma en cada vista
