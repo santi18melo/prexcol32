@@ -2,10 +2,7 @@
 import React, { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import {
-  getOrdersInPreparation,
-  updateOrderStatus,
-} from "../services/orderService";
+import OrderService from "../services/orderService";
 import "../styles/LogisticaDashboard.css";
 
 export default function LogisticaDashboard() {
@@ -21,7 +18,7 @@ export default function LogisticaDashboard() {
   const cargarPedidos = useCallback(async () => {
     setLoading(true);
     try {
-      const data = await getOrdersInPreparation();
+      const data = await OrderService.getOrdersInPreparation();
       const pedidosData = data.results || data;
       setPedidos(Array.isArray(pedidosData) ? pedidosData : []);
       setError("");
@@ -41,7 +38,7 @@ export default function LogisticaDashboard() {
     if (!window.confirm(`¿Cambiar pedido #${pedidoId} a "${nuevoEstado}"?`)) return;
 
     try {
-      await updateOrderStatus(pedidoId, nuevoEstado);
+      await OrderService.updateOrderStatus(pedidoId, nuevoEstado);
       setSuccess(`✓ Pedido #${pedidoId} actualizado`);
       await cargarPedidos();
       setTimeout(() => setSuccess(""), 3000);

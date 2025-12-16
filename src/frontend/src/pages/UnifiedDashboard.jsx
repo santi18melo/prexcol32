@@ -1,12 +1,7 @@
-// frontend/src/pages/UnifiedDashboard.jsx
 import React, { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import {
-  getPendingOrders,
-  getOrdersInPreparation,
-  updateOrderStatus,
-} from "../services/orderService";
+import OrderService from "../services/orderService";
 import { axiosInstance } from "../services/api";
 import "../styles/CompradorDashboard.css"; // Reusing styles for now
 import DashboardHeader from "../components/DashboardHeader";
@@ -34,10 +29,10 @@ export default function UnifiedDashboard() {
       let data = [];
       // Fetch based on active tab
       if (activeTab === "pendiente") {
-        const res = await getPendingOrders();
+        const res = await OrderService.getPendingOrders();
         data = res.results || res;
       } else if (activeTab === "preparando") {
-        const res = await getOrdersInPreparation();
+        const res = await OrderService.getOrdersInPreparation();
         data = res.results || res;
       } else if (activeTab === "en_transito") {
         const res = await axiosInstance.get("/productos/pedidos/");
@@ -73,7 +68,7 @@ export default function UnifiedDashboard() {
     }
 
     try {
-      await updateOrderStatus(pedidoId, nuevoEstado);
+      await OrderService.updateOrderStatus(pedidoId, nuevoEstado);
       setSuccess(`✓ Pedido #${pedidoId} actualizado a ${nuevoEstado}`);
       await cargarPedidos();
       setTimeout(() => setSuccess(""), 3000);

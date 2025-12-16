@@ -43,12 +43,12 @@ function PanelLogistica() {
     setLoading(true);
     setError('');
     try {
-      const data = await OrderService.getPedidosEnPreparacion();
+      const data = await OrderService.getOrdersInPreparation();
       const lista = Array.isArray(data) ? data : [];
       // Marcar categorías por pedido: si contienen básicos / no básicos (obtener detalles)
       const marcados = await Promise.all(lista.map(async p => {
         try {
-          const detalles = await OrderService.getDetallesPedido(p.id);
+          const detalles = await OrderService.getOrderDetailsItems(p.id);
           const dets = Array.isArray(detalles) ? detalles : [];
           const tiene_basicos = dets.some(d => d.es_basico);
           const tiene_no_basicos = dets.some(d => !d.es_basico);
@@ -77,7 +77,7 @@ function PanelLogistica() {
 
   const cargarDetalles = async (pedidoId) => {
     try {
-      const data = await OrderService.getDetallesPedido(pedidoId);
+      const data = await OrderService.getOrderDetailsItems(pedidoId);
       setDetalles(Array.isArray(data) ? data : []);
     } catch (err) {
       console.error('Error cargando detalles:', err);
@@ -95,7 +95,7 @@ function PanelLogistica() {
     setError('');
     setMensaje('');
     try {
-      await OrderService.cambiarEstadoPedido(pedidoId, nuevoEstado);
+      await OrderService.updateOrderStatus(pedidoId, nuevoEstado);
       setMensaje(`✓ Pedido actualizado a ${nuevoEstado}`);
       
       setTimeout(() => {

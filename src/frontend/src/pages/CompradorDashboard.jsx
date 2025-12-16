@@ -1,11 +1,7 @@
-// frontend/src/pages/CompradorDashboard.jsx - PROFESSIONAL & COMPLETE
 import React, { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import {
-  getPendingOrders,
-  updateOrderStatus,
-} from "../services/orderService";
+import OrderService from "../services/orderService";
 import "../styles/CompradorDashboard.css";
 import DashboardHeader from "../components/DashboardHeader";
 
@@ -23,7 +19,7 @@ export default function CompradorDashboard() {
   const cargarPedidos = useCallback(async () => {
     setLoading(true);
     try {
-      const data = await getPendingOrders();
+      const data = await OrderService.getPendingOrders();
       const pedidosData = data.results || data;
       setPedidos(Array.isArray(pedidosData) ? pedidosData : []);
       setError("");
@@ -46,7 +42,7 @@ export default function CompradorDashboard() {
     }
 
     try {
-      await updateOrderStatus(pedidoId, nuevoEstado);
+      await OrderService.updateOrderStatus(pedidoId, nuevoEstado);
       setSuccess(`✓ Pedido #${pedidoId} actualizado a ${nuevoEstado}`);
       await cargarPedidos();
       setTimeout(() => setSuccess(""), 3000);

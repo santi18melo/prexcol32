@@ -150,9 +150,9 @@ export default function DashboardAdmin() {
               return { 
                   tiendas: stores, 
                   loading,
-                  onCreate: async (d) => { await productosService.crearTienda(d); fetchData(); },
-                  onUpdate: async (d) => { await productosService.actualizarTienda(d.id, d); fetchData(); },
-                  onDelete: async (id) => { await productosService.eliminarTienda(id); fetchData(); }
+                  onCreate: async (d) => { await StoreService.createStore(d); fetchData(); },
+                  onUpdate: async (d) => { await StoreService.updateStore(d.id, d); fetchData(); },
+                  onDelete: async (id) => { await StoreService.deleteStore(id); fetchData(); }
               };
           case 'products':
               return { 
@@ -161,15 +161,15 @@ export default function DashboardAdmin() {
                   tiendas: stores,
                   proveedores: providers,
                   categorias: categories,
-                  onCreate: async (d) => { await productosService.crearProducto(d); fetchData(); },
-                  onUpdate: async (d) => { await productosService.actualizarProducto(d.id, d); fetchData(); },
-                  onDelete: async (id) => { await productosService.eliminarProducto(id); fetchData(); }
+                  onCreate: async (d) => { await ProductService.createProduct(d); fetchData(); },
+                  onUpdate: async (d) => { await ProductService.updateProduct(d.id, d); fetchData(); },
+                  onDelete: async (id) => { await ProductService.deleteProduct(id); fetchData(); }
               };
           case 'orders':
               return { 
                   pedidos: orders, 
                   loading,
-                  onUpdate: async (d) => { await productosService.cambiarEstadoPedido(d.id, d.estado); fetchData(); }
+                  onUpdate: async (d) => { await OrderService.updateOrderStatus(d.id, d.estado); fetchData(); }
               };
           case 'categories':
               return {
