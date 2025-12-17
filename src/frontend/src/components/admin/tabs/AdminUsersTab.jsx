@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from '../../../context/I18nContext';
 
 export default function AdminUsersTab({ 
   usuarios, 
@@ -8,6 +9,7 @@ export default function AdminUsersTab({
   onCreate, 
   roles 
 }) {
+  const { t } = useTranslation();
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [formData, setFormData] = useState({
@@ -75,50 +77,50 @@ export default function AdminUsersTab({
   return (
     <div className="content-section">
       <div className="section-header">
-        <h2>Gestión de Usuarios</h2>
+        <h2>{t('users.title')}</h2>
         <button className="btn-primary" onClick={() => { resetForm(); setShowForm(!showForm); }}>
-          {showForm ? "✕ Cancelar" : "+ Nuevo Usuario"}
+          {showForm ? `✕ ${t('common.cancel')}` : `+ ${t('users.createUser')}`}
         </button>
       </div>
 
       {showForm && (
         <form onSubmit={handleSubmit} className="form-card">
           <div className="form-head">
-              <h3>{editingId ? 'Editar Usuario' : 'Crear Usuario'}</h3>
+              <h3>{editingId ? t('users.editUser') : t('users.createUser')}</h3>
           </div>
           <div className="form-grid">
-            <input type="text" placeholder="Nombre" value={formData.nombre} onChange={e => setFormData({...formData, nombre: e.target.value})} required />
-            <input type="email" placeholder="Email" value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} required />
-            <input type="password" placeholder={editingId ? "Contraseña (dejar en blanco para mantener)" : "Contraseña"} value={formData.password} onChange={e => setFormData({...formData, password: e.target.value})} required={!editingId} />
+            <input type="text" placeholder={t('common.name')} value={formData.nombre} onChange={e => setFormData({...formData, nombre: e.target.value})} required />
+            <input type="email" placeholder={t('common.email')} value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} required />
+            <input type="password" placeholder={editingId ? `${t('common.password')} (${t('settings.newPasswordRequired', {defaultValue: 'dejar blanco para mantener'})})` : t('common.password')} value={formData.password} onChange={e => setFormData({...formData, password: e.target.value})} required={!editingId} />
             <select value={formData.rol} onChange={e => setFormData({...formData, rol: e.target.value})}>
-              <option value="cliente">Cliente</option>
-              <option value="proveedor">Proveedor</option>
-              <option value="logistica">Logística</option>
-              <option value="admin">Admin</option>
+              <option value="cliente">{t('users.roles.client')}</option>
+              <option value="proveedor">{t('users.roles.provider')}</option>
+              <option value="logistica">{t('users.roles.logistics')}</option>
+              <option value="admin">{t('users.roles.admin')}</option>
             </select>
-            <input type="tel" placeholder="Teléfono" value={formData.telefono} onChange={e => setFormData({...formData, telefono: e.target.value})} />
-            <input type="text" placeholder="Dirección" value={formData.direccion} onChange={e => setFormData({...formData, direccion: e.target.value})} />
+            <input type="tel" placeholder={t('common.phone')} value={formData.telefono} onChange={e => setFormData({...formData, telefono: e.target.value})} />
+            <input type="text" placeholder={t('common.address')} value={formData.direccion} onChange={e => setFormData({...formData, direccion: e.target.value})} />
             <div className="form-group" style={{ gridColumn: '1 / -1' }}>
-                <label>Foto de Perfil</label>
+                <label>{t('profile.changePhoto', {defaultValue: 'Foto de Perfil'})}</label>
                 <input type="file" accept="image/*" onChange={e => setFormData({...formData, imagen: e.target.files[0]})} />
             </div>
           </div>
-          <button type="submit" className="btn-submit">{editingId ? 'Actualizar' : 'Crear Usuario'}</button>
+          <button type="submit" className="btn-submit">{editingId ? t('common.save') : t('common.create')}</button>
         </form>
       )}
 
       <div className="filters-container">
         <select value={filtroRol} onChange={e => setFiltroRol(e.target.value)} className="filter-select">
-          <option value="todos">Todos los Roles</option>
-          <option value="admin">Admin</option>
-          <option value="proveedor">Proveedor</option>
-          <option value="cliente">Cliente</option>
-          <option value="logistica">Logística</option>
+          <option value="todos">{t('common.filter')} {t('users.role')}</option>
+          <option value="admin">{t('users.roles.admin')}</option>
+          <option value="proveedor">{t('users.roles.provider')}</option>
+          <option value="cliente">{t('users.roles.client')}</option>
+          <option value="logistica">{t('users.roles.logistics')}</option>
         </select>
         <select value={filtroEstado} onChange={e => setFiltroEstado(e.target.value)} className="filter-select">
-          <option value="todos">Todos los Estados</option>
-          <option value="activo">Activos</option>
-          <option value="inactivo">Inactivos</option>
+          <option value="todos">{t('common.filter')} {t('users.status')}</option>
+          <option value="activo">{t('users.active')}</option>
+          <option value="inactivo">{t('users.inactive')}</option>
         </select>
       </div>
 
@@ -126,11 +128,11 @@ export default function AdminUsersTab({
         <table className="admin-table">
           <thead>
             <tr>
-              <th>Usuario</th>
-              <th>Rol</th>
+              <th>{t('users.title')}</th>
+              <th>{t('users.role')}</th>
               <th>Permisos</th>
-              <th>Estado</th>
-              <th>Acciones</th>
+              <th>{t('users.status')}</th>
+              <th>{t('common.actions')}</th>
             </tr>
           </thead>
           <tbody>
@@ -149,7 +151,7 @@ export default function AdminUsersTab({
                     </div>
                   </div>
                 </td>
-                <td><span className={`badge role-${usuario.rol}`}>{usuario.rol}</span></td>
+                <td><span className={`badge role-${usuario.rol}`}>{t(`users.roles.${usuario.rol}`, {defaultValue: usuario.rol})}</span></td>
                 <td>
                     {usuario.is_superuser && <span className="badge" style={{backgroundColor: '#ff4757', marginRight: '4px'}}>Superuser</span>}
                     {usuario.is_staff && <span className="badge" style={{backgroundColor: '#5352ed'}}>Staff</span>}
@@ -160,13 +162,13 @@ export default function AdminUsersTab({
                     className={`status-toggle ${usuario.estado ? 'active' : 'inactive'}`}
                     onClick={() => onUpdate({...usuario, estado: !usuario.estado})}
                   >
-                    {usuario.estado ? 'Activo' : 'Inactivo'}
+                    {usuario.estado ? t('users.active') : t('users.inactive')}
                   </button>
                 </td>
                 <td>
                   <div className="actions-cell">
-                    <button className="btn-icon edit" onClick={() => handleEdit(usuario)}>✏️</button>
-                    <button className="btn-icon delete" onClick={() => onDelete(usuario.id)}>🗑️</button>
+                    <button className="btn-icon edit" onClick={() => handleEdit(usuario)} title={t('common.edit')}>✏️</button>
+                    <button className="btn-icon delete" onClick={() => onDelete(usuario.id)} title={t('common.delete')}>🗑️</button>
                   </div>
                 </td>
               </tr>

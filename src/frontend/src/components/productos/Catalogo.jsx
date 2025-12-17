@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { axiosInstance } from '../../services/api';
 import CategoryService from '../../services/categoryService';
 import ProductService from '../../services/productService';
-import '../styles/Catalogo.css'; // Assuming styling or I'll use inline styles for now
+import '../../styles/Catalogo.css'; // Assuming styling or I'll use inline styles for now
 
 function Catalogo() {
   const [viewMode, setViewMode] = useState('categories'); // 'categories' | 'products'

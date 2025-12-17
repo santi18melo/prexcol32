@@ -43,7 +43,9 @@ const UserService = {
    */
   async getAllUsers(params = {}) {
     try {
-      const response = await axiosInstance.get("/usuarios/", { params });
+      // Ensure we get enough result for client-side handling until full server-side pagination is implemented in UI
+      const finalParams = { page_size: 1000, ...params };
+      const response = await axiosInstance.get("/usuarios/", { params: finalParams });
       // Return full response for pagination
       return response.data;
     } catch (error) {
