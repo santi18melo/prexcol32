@@ -85,8 +85,8 @@ axiosInstance.interceptors.response.use(
     // Handle 401 (Unauthorized) or 403 (Forbidden)
     if (error.response?.status === 401 || error.response?.status === 403) {
       
-      // If it's a refresh token failure, or we've already retried, or it's a 403
-      if (originalReq.url.includes('/token/refresh/') || originalReq._retry || error.response?.status === 403) {
+      // If it's a refresh token failure, or we've already retried, or it's a 403, or it is the login endpoint itself
+      if (originalReq.url.includes('/token/refresh/') || originalReq.url.includes('/auth/login/') || originalReq._retry || error.response?.status === 403) {
         console.warn("[🔒 AUTH] Session invalid/expired. Logging out...");
         localStorage.removeItem("token");
         localStorage.removeItem("refresh");
